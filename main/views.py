@@ -1,12 +1,16 @@
 #  /Mountain Pass Application/main/views.py
 
 import traceback
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
+import os
 from main.serializers import SubmitDataSerializer
 from main.db_service import DatabaseService
-from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from main.models import PerevalImages, PerevalAdded
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 class SubmitDataView(APIView):
     """API для приёма данных о перевале"""
@@ -36,3 +40,38 @@ class SubmitDataView(APIView):
             # Выводим полную трассировку ошибки в консоль
             traceback.print_exc()
             return Response({"status": 500, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class UploadImageView(APIView):
+    """API для загрузки изображений перевалов"""
+
+    def post(self, request):
+        """Принимает изображение, сохраняет его и записывает в БД"""
+
+        # Проверяем, есть ли файл в запросе
+        if 'image' not in request.FILES:
+            return Response({"status": 400, "message": "Файл изображения обязателен"}, status=status.HTTP_400_BAD_REQUEST)
+
+        image = request.FILES['image']
+        pereval_id = request.data.get('pereval_id')
+
+        # Проверяем, существует ли перевал
+        try:
+            pereval = PerevalAdded.objects.get(id=pereval_id)
+        except PerevalAdded.DoesNotExist:
+            return Response({"status": 400, "message": "Перевал не найден"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Определяем путь для сохранения файла
+        upload_dir = os.path.join(settings.MEDIA_ROOT, "pereval_images")
+        if not os.path.exists(upload_dir):
+            os.makedirs(upload_dir)
+
+        # Сохраняем файл в `MEDIA_ROOT/pereval_images/`
+        file_path = os.path.join("pereval_images", image.name)
+        full_path = os.path.join(settings.MEDIA_ROOT, file_path)
+        default_storage.save(full_path, ContentFile(image.read()))
+
+        # Сохраняем путь в БД
+        image_record = PerevalImages.objects.create(pereval=pereval, image_path=file_path)
+
+        return Response({"status": 200, "message": "Файл загружен", "image_id": image_record.id}, status=status.HTTP_201_CREATED)
