@@ -12,6 +12,7 @@ from rest_framework import status
 from main.models import PerevalGpsTracks, PerevalAdded
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from main.services.google_maps import get_google_map_link
 
 
 class SubmitDataView(APIView):
@@ -112,3 +113,8 @@ class UploadTrackView(APIView):
         track_record = PerevalGpsTracks.objects.create(pereval=pereval, track_path=file_path)
 
         return Response({"status": 200, "message": "Файл трека загружен", "track_id": track_record.id}, status=status.HTTP_201_CREATED)
+
+
+
+
+

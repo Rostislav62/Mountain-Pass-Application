@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -150,3 +151,11 @@ TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
 MEDIA_URL = '/media/'  # URL для доступа к медиа-файлам
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Директория для сохранения медиа
+
+
+load_dotenv()  # Загружаем переменные из .env
+
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+STRAVA_API_KEY = os.getenv("STRAVA_API_KEY")
+YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")

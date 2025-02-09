@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a1a4b818-4875-4a69-9556-0bd326933e56" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/.idea/Mountain Pass Application.iml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
@@ -14,6 +15,9 @@
       <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/main/db_service.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/main/serializers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/services/google_maps.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/services/openweather.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/services/strava.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/main/tests/test_api.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/main/tests/test_db_service.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/main/urls.py" afterDir="false" />
