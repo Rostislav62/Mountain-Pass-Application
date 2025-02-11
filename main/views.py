@@ -9,7 +9,7 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from main.models import PerevalGpsTracks, PerevalAdded
+# from main.models import PerevalGpsTracks, PerevalAdded
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from main.services.google_maps import get_google_map_link

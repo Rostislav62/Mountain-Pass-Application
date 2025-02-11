@@ -1,6 +1,7 @@
 #  /Mountain Pass Application/main/db_service.py
 
-from main.models import User, PerevalAdded, PerevalImages, PerevalGpsTracks, PerevalHistory, Coords, RelatedObjects, WeatherInfo
+from main.models import User, PerevalAdded, PerevalImages, Coords, WeatherInfo
+# from main.models import PerevalGpsTracks, PerevalHistory, RelatedObjects
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist  # Для обработки ошибок, если перевала нет
 
@@ -60,63 +61,92 @@ class DatabaseService:
             # Если перевал с указанным ID не найден, выбрасываем ошибку
             raise ValueError(f"Перевал с ID {pereval_id} не найден в базе данных")
 
-    @staticmethod
-    def add_gps_track(pereval_id, track_url):
-        """
-        Добавляет GPS-трек (GPX/KML) для указанного перевала.
+    # @staticmethod
+    # def add_gps_track(pereval_id, track_url):
+    #     """
+    #     Добавляет GPS-трек (GPX/KML) для указанного перевала.
+    #
+    #     :param pereval_id: ID перевала, к которому привязываем GPS-трек.
+    #     :param track_url: Ссылка (путь) на файл GPS-трека.
+    #     :return: Объект GPS-трека или ошибка, если перевал не найден.
+    #     """
+    #
+    #     try:
+    #         # Пытаемся найти перевал в базе данных по ID
+    #         pereval = PerevalAdded.objects.get(id=pereval_id)
+    #
+    #         # Создаём запись в таблице PerevalGpsTracks, привязывая к найденному перевалу
+    #         gps_track = PerevalGpsTracks.objects.create(pereval=pereval, track_path=track_url)
+    #
+    #         # Возвращаем созданный объект GPS-трека
+    #         return gps_track
+    #
+    #     except ObjectDoesNotExist:
+    #         # Если перевал с указанным ID не найден, выбрасываем ошибку
+    # #         raise ValueError(f"Перевал с ID {pereval_id} не найден в базе данных")
+    #
+    # @staticmethod
+    # def add_pereval_history(user_email, pereval_id, pass_date, comments=None):
+    #     """
+    #     Добавляет запись о прохождении перевала.
+    #
+    #     :param user_email: Email пользователя, совершившего прохождение.
+    #     :param pereval_id: ID перевала, который был пройден.
+    #     :param pass_date: Дата прохождения перевала.
+    #     :param comments: Дополнительные комментарии (необязательно).
+    #     :return: Объект PerevalHistory или ошибка, если пользователь или перевал не найдены.
+    #     """
+    #
+    #     try:
+    #         # Пытаемся найти пользователя по email
+    #         user = User.objects.get(email=user_email)
+    #
+    #         # Пытаемся найти перевал по ID
+    #         pereval = PerevalAdded.objects.get(id=pereval_id)
+    #
+    #         # Создаём запись о прохождении перевала
+    #         history_entry = PerevalHistory.objects.create(
+    #             user=user,
+    #             pereval=pereval,
+    #             pass_date=pass_date,
+    #             comments=comments
+    #         )
+    #
+    #         # Возвращаем созданный объект истории прохождений
+    #         return history_entry
+    #
+    #     except ObjectDoesNotExist as e:
+    #         # Если пользователь или перевал не найдены, выбрасываем ошибку
+    #         raise ValueError(f"Ошибка: {str(e)}")
 
-        :param pereval_id: ID перевала, к которому привязываем GPS-трек.
-        :param track_url: Ссылка (путь) на файл GPS-трека.
-        :return: Объект GPS-трека или ошибка, если перевал не найден.
-        """
+    #
+    # @staticmethod
+    # def add_related_objects(pereval_id, related_name, related_type):
+    #     """
+    #     Добавляет связанный объект (гора, хребет и т. д.) для указанного перевала.
+    #
+    #     :param pereval_id: ID перевала, к которому привязываем объект.
+    #     :param related_name: Название связанного объекта.
+    #     :param related_type: Тип объекта ('mountain', 'ridge', 'other').
+    #     :return: Объект RelatedObjects или ошибка, если перевал не найден.
+    #     """
+    #
+    #     try:
+    #         # Проверяем, существует ли перевал с таким ID
+    #         pereval = PerevalAdded.objects.get(id=pereval_id)
+    #
+    #         # Создаём запись о связанном объекте
+    #         related_object = RelatedObjects.objects.create(
+    #             pereval=pereval,
+    #             related_name=related_name,
+    #             related_type=related_type
+    #         )
+    #
+    #         return related_object
+    #
+    #     except ObjectDoesNotExist:
+    #         raise ValueError(f"Перевал с ID {pereval_id} не найден в базе данных")
 
-        try:
-            # Пытаемся найти перевал в базе данных по ID
-            pereval = PerevalAdded.objects.get(id=pereval_id)
-
-            # Создаём запись в таблице PerevalGpsTracks, привязывая к найденному перевалу
-            gps_track = PerevalGpsTracks.objects.create(pereval=pereval, track_path=track_url)
-
-            # Возвращаем созданный объект GPS-трека
-            return gps_track
-
-        except ObjectDoesNotExist:
-            # Если перевал с указанным ID не найден, выбрасываем ошибку
-            raise ValueError(f"Перевал с ID {pereval_id} не найден в базе данных")
-
-    @staticmethod
-    def add_pereval_history(user_email, pereval_id, pass_date, comments=None):
-        """
-        Добавляет запись о прохождении перевала.
-
-        :param user_email: Email пользователя, совершившего прохождение.
-        :param pereval_id: ID перевала, который был пройден.
-        :param pass_date: Дата прохождения перевала.
-        :param comments: Дополнительные комментарии (необязательно).
-        :return: Объект PerevalHistory или ошибка, если пользователь или перевал не найдены.
-        """
-
-        try:
-            # Пытаемся найти пользователя по email
-            user = User.objects.get(email=user_email)
-
-            # Пытаемся найти перевал по ID
-            pereval = PerevalAdded.objects.get(id=pereval_id)
-
-            # Создаём запись о прохождении перевала
-            history_entry = PerevalHistory.objects.create(
-                user=user,
-                pereval=pereval,
-                pass_date=pass_date,
-                comments=comments
-            )
-
-            # Возвращаем созданный объект истории прохождений
-            return history_entry
-
-        except ObjectDoesNotExist as e:
-            # Если пользователь или перевал не найдены, выбрасываем ошибку
-            raise ValueError(f"Ошибка: {str(e)}")
 
     @staticmethod
     @transaction.atomic
@@ -177,33 +207,6 @@ class DatabaseService:
 
         return pereval
 
-
-    @staticmethod
-    def add_related_objects(pereval_id, related_name, related_type):
-        """
-        Добавляет связанный объект (гора, хребет и т. д.) для указанного перевала.
-
-        :param pereval_id: ID перевала, к которому привязываем объект.
-        :param related_name: Название связанного объекта.
-        :param related_type: Тип объекта ('mountain', 'ridge', 'other').
-        :return: Объект RelatedObjects или ошибка, если перевал не найден.
-        """
-
-        try:
-            # Проверяем, существует ли перевал с таким ID
-            pereval = PerevalAdded.objects.get(id=pereval_id)
-
-            # Создаём запись о связанном объекте
-            related_object = RelatedObjects.objects.create(
-                pereval=pereval,
-                related_name=related_name,
-                related_type=related_type
-            )
-
-            return related_object
-
-        except ObjectDoesNotExist:
-            raise ValueError(f"Перевал с ID {pereval_id} не найден в базе данных")
 
     @staticmethod
     def get_weather(pereval_id):

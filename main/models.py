@@ -58,37 +58,37 @@ class PerevalImages(models.Model):
         return self.image_path
 
 
-class PerevalGpsTracks(models.Model):
-    pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE)
-    track_path = models.TextField()
-
-    def __str__(self):
-        return self.track_path
-
-
-class PerevalHistory(models.Model):
-    pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    pass_date = models.DateField()
-    comments = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.pereval.title} - {self.pass_date}"
+# class PerevalGpsTracks(models.Model):
+#     pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE)
+#     track_path = models.TextField()
+#
+#     def __str__(self):
+#         return self.track_path
 
 
-class RelatedObjects(models.Model):
-    RELATED_TYPE_CHOICES = [
-        ('mountain', 'Mountain'),
-        ('ridge', 'Ridge'),
-        ('other', 'Other'),
-    ]
+# class PerevalHistory(models.Model):
+#     pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE)
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#     pass_date = models.DateField()
+#     comments = models.TextField(blank=True, null=True)
+#
+#     def __str__(self):
+#         return f"{self.pereval.title} - {self.pass_date}"
 
-    pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE)
-    related_name = models.CharField(max_length=255)
-    related_type = models.CharField(max_length=50, choices=RELATED_TYPE_CHOICES)
 
-    def __str__(self):
-        return f"{self.related_name} ({self.related_type})"
+# class RelatedObjects(models.Model):
+#     RELATED_TYPE_CHOICES = [
+#         ('mountain', 'Mountain'),
+#         ('ridge', 'Ridge'),
+#         ('other', 'Other'),
+#     ]
+#
+#     pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE)
+#     related_name = models.CharField(max_length=255)
+#     related_type = models.CharField(max_length=50, choices=RELATED_TYPE_CHOICES)
+#
+#     def __str__(self):
+#         return f"{self.related_name} ({self.related_type})"
 
 
 class WeatherInfo(models.Model):
