@@ -3,7 +3,7 @@
 
 import logging
 from rest_framework import serializers
-from main.models import PerevalAdded, Coords, User, PerevalImages
+from main.models import PerevalAdded, Coords, User, PerevalImages, PerevalDifficulty
 
 logger = logging.getLogger(__name__)  # Логируем данные для отладки
 
@@ -42,48 +42,35 @@ class PerevalImagesSerializer(serializers.ModelSerializer):
         fields = ['image_path']
 
 
+class PerevalDifficultySerializer(serializers.ModelSerializer):
+    """Сериализатор уровня сложности"""
+    class Meta:
+        model = PerevalDifficulty
+        fields = ['season', 'level']
 
 
 class SubmitDataSerializer(serializers.ModelSerializer):
     """Сериализатор для входных данных API"""
 
-    user = UserSerializer()
-    coords = CoordsSerializer()
-    images = PerevalImagesSerializer(many=True)
-
+    user = UserSerializer()  # Декодируем объект пользователя
+    coord = CoordsSerializer()  # Декодируем объект координат
+    difficulties = PerevalDifficultySerializer(many=True)  # Теперь список сложностей
+    images = PerevalImagesSerializer(many=True, read_only=True)
     class Meta:
         model = PerevalAdded
-        fields = [
-            'beautyTitle', 'title', 'other_titles', 'connect',
-            'add_time', 'user', 'coords', 'status', 'level_winter',
-            'level_summer', 'level_autumn', 'level_spring', 'images'
-        ]
+        images = PerevalImagesSerializer(many=True, read_only=True)  # Связанное поле
+        fields = ['beautyTitle', 'title', 'other_titles', 'connect', 'add_time', 'user', 'coord', 'status',
+                  'difficulties', 'images']
 
     def create(self, validated_data):
-        """Обрабатываем создание перевала"""
+        """Создание перевала с уровнями сложности"""
+        difficulties_data = validated_data.pop('difficulties')  # Извлекаем уровни сложности
+        pereval = PerevalAdded.objects.create(**validated_data)
 
-        # Логируем входные данные для отладки
-        logger.debug(f"validated_data: {validated_data}")
-
-        user_data = validated_data.pop('user', None)
-
-        # Если `user_data` отсутствует, вызываем ошибку
-        if not user_data:
-            raise serializers.ValidationError({"user": "Поле `user` обязательно"})
-
-        # Проверяем, что ключи `fam`, `name`, `phone` есть в user_data
-        required_fields = ['email', 'fam', 'name', 'phone']
-        missing_fields = [field for field in required_fields if field not in user_data]
-        if missing_fields:
-            raise serializers.ValidationError({field: f"Поле `{field}` обязательно" for field in missing_fields})
-
-        # Получаем пользователя или создаём нового
-        user, _ = User.objects.get_or_create(email=user_data['email'], defaults=user_data)
-
-        # Создаём координаты
-        coords = Coords.objects.create(**validated_data.pop('coords'))
-
-        # Создаём перевал
-        pereval = PerevalAdded.objects.create(user=user, coord=coords, **validated_data)
+        # Создаём записи сложности
+        for diff_data in difficulties_data:
+            PerevalDifficulty.objects.create(pereval=pereval, **diff_data)
 
         return pereval
+
+

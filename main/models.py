@@ -39,10 +39,10 @@ class PerevalAdded(models.Model):
     connect = models.TextField(blank=True, null=True)
     add_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='new')
-    level_winter = models.CharField(max_length=10, blank=True, null=True)
-    level_summer = models.CharField(max_length=10, blank=True, null=True)
-    level_autumn = models.CharField(max_length=10, blank=True, null=True)
-    level_spring = models.CharField(max_length=10, blank=True, null=True)
+    # level_winter = models.CharField(max_length=10, blank=True, null=True)
+    # level_summer = models.CharField(max_length=10, blank=True, null=True)
+    # level_autumn = models.CharField(max_length=10, blank=True, null=True)
+    # level_spring = models.CharField(max_length=10, blank=True, null=True)
     route_description = models.TextField(blank=True, null=True)
     hazards = models.TextField(blank=True, null=True)
 
@@ -51,7 +51,7 @@ class PerevalAdded(models.Model):
 
 
 class PerevalImages(models.Model):
-    pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE)
+    pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE, related_name="images")
     image_path = models.TextField()
 
     def __str__(self):
@@ -101,3 +101,20 @@ class WeatherInfo(models.Model):
     def __str__(self):
         return f"Weather for {self.pereval.title} on {self.weather_date}"
 
+
+
+class PerevalDifficulty(models.Model):
+    """Уровень сложности перевала в разные сезоны"""
+    SEASON_CHOICES = [
+        ('winter', 'Зима'),
+        ('summer', 'Лето'),
+        ('autumn', 'Осень'),
+        ('spring', 'Весна')
+    ]
+
+    pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE, related_name="difficulties")
+    season = models.CharField(max_length=10, choices=SEASON_CHOICES)
+    level = models.CharField(max_length=10)
+
+    class Meta:
+        unique_together = ('pereval', 'season')  # Запрещаем дублирование данных для одного сезона

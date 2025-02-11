@@ -147,66 +147,33 @@ class DatabaseService:
     #     except ObjectDoesNotExist:
     #         raise ValueError(f"Перевал с ID {pereval_id} не найден в базе данных")
 
-
     @staticmethod
     @transaction.atomic
     def add_pereval(user_email, data):
         """
         Добавляет новый перевал в БД.
-
-        :param user_email: Email пользователя.
-        :param data: Входные данные перевала.
-        :return: Созданный объект PerevalAdded.
         """
 
-        # Получаем данные пользователя из `data['user']`
+        # Получаем данные пользователя
         user_data = data.get('user', {})
-        fam = user_data.get('fam')
-        name = user_data.get('name')
-        otc = user_data.get('otc', '')
-        phone = user_data.get('phone')
-
-        # Проверяем, что обязательные поля не пустые
-        if not all([user_email, fam, name, phone]):
-            raise ValueError("Обязательные поля пользователя отсутствуют")
-
-        # Получаем или создаём пользователя
-        user, _ = User.objects.get_or_create(email=user_email, defaults={
-            'fam': fam,
-            'name': name,
-            'otc': otc,
-            'phone': phone
-        })
+        user, _ = User.objects.get_or_create(email=user_email, defaults=user_data)
 
         # Создаём координаты перевала
-        coords_data = data.get('coords', {})
-        coords = Coords.objects.create(
-            latitude=coords_data.get('latitude'),
-            longitude=coords_data.get('longitude'),
-            height=coords_data.get('height')
-        )
+        coord_data = data.get('coord', {})
+        coord = Coords.objects.create(**coord_data)
 
         # Создаём запись перевала
         pereval = PerevalAdded.objects.create(
             user=user,
-            coord=coords,
+            coord=coord,
             beautyTitle=data.get('beautyTitle', ''),
             title=data.get('title', ''),
             other_titles=data.get('other_titles', ''),
             connect=data.get('connect', ''),
             status='new',
-            level_winter=data.get('level_winter', ''),
-            level_summer=data.get('level_summer', ''),
-            level_autumn=data.get('level_autumn', ''),
-            level_spring=data.get('level_spring', '')
         )
 
-        # Добавляем изображения
-        for image in data.get('images', []):
-            PerevalImages.objects.create(pereval=pereval, image_path=image['image_path'])
-
         return pereval
-
 
     @staticmethod
     def get_weather(pereval_id):
