@@ -37,9 +37,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 class PerevalImagesSerializer(serializers.ModelSerializer):
     """Сериализатор для изображений перевала"""
+
     class Meta:
         model = PerevalImages
-        fields = ['image_path']
+        fields = ['data', 'title']
+
 
 
 class PerevalDifficultySerializer(serializers.ModelSerializer):
@@ -55,22 +57,35 @@ class SubmitDataSerializer(serializers.ModelSerializer):
     user = UserSerializer()  # Декодируем объект пользователя
     coord = CoordsSerializer()  # Декодируем объект координат
     difficulties = PerevalDifficultySerializer(many=True)  # Теперь список сложностей
-    images = PerevalImagesSerializer(many=True, read_only=True)
+
+    images = PerevalImagesSerializer(many=True, required=True)
     class Meta:
         model = PerevalAdded
-        images = PerevalImagesSerializer(many=True, read_only=True)  # Связанное поле
         fields = ['beautyTitle', 'title', 'other_titles', 'connect', 'add_time', 'user', 'coord', 'status',
                   'difficulties', 'images']
 
     def create(self, validated_data):
-        """Создание перевала с уровнями сложности"""
-        difficulties_data = validated_data.pop('difficulties')  # Извлекаем уровни сложности
+        difficulties_data = validated_data.pop('difficulties', [])
+        images_data = validated_data.get('images', [])
+
+        print("🔍 Полученные изображения в `create()`: ", images_data)  # Вывод в консоль
+        print("Полученные изображения:", images_data)  # Вывод в консоль для проверки
+
         pereval = PerevalAdded.objects.create(**validated_data)
 
-        # Создаём записи сложности
-        for diff_data in difficulties_data:
-            PerevalDifficulty.objects.create(pereval=pereval, **diff_data)
+        # Создаём изображения (ДОЛЖНО БЫТЬ ИМЕННО ТАК!)
+        for image_data in images_data:
+            PerevalImages.objects.create(
+                pereval=pereval,
+                data=image_data.get("data", ""),  # Проверяем, передаётся ли data
+                title=image_data.get("title", "")  # Проверяем, передаётся ли title
+            )
 
         return pereval
+
+
+
+
+
 
 

@@ -38,7 +38,7 @@ class DatabaseService:
         return coords
 
     @staticmethod
-    def add_image(pereval_id, image_url):
+    def add_image(pereval_id, data, title):
         """
         Добавляет изображение для указанного перевала.
 
@@ -52,7 +52,7 @@ class DatabaseService:
             pereval = PerevalAdded.objects.get(id=pereval_id)
 
             # Создаём запись в таблице PerevalImages, привязывая к найденному перевалу
-            image = PerevalImages.objects.create(pereval=pereval, image_path=image_url)
+            image = PerevalImages.objects.create(pereval=pereval, data=data, title=title)
 
             # Возвращаем созданный объект изображения
             return image
@@ -172,6 +172,14 @@ class DatabaseService:
             connect=data.get('connect', ''),
             status='new',
         )
+
+        images_data = data.get('images', [])
+        for image_data in images_data:
+            PerevalImages.objects.create(
+                pereval=pereval,
+                data=image_data.get("data", ""),
+                title=image_data.get("title", "")
+            )
 
         return pereval
 

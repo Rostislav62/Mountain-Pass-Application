@@ -52,10 +52,12 @@ class PerevalAdded(models.Model):
 
 class PerevalImages(models.Model):
     pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE, related_name="images")
-    image_path = models.TextField()
+    data = models.TextField(default="")  # Ссылка на изображение или бинарные данные
+    title = models.CharField(max_length=255, default="")  # Описание изображения
 
     def __str__(self):
-        return self.image_path
+        return f"{self.title} ({self.data})"
+
 
 
 # class PerevalGpsTracks(models.Model):
