@@ -83,7 +83,16 @@ class SubmitDataSerializer(serializers.ModelSerializer):
 
         return pereval
 
+    def update(self, instance, validated_data):
+        """Обновляем перевал"""
+        user_data = validated_data.pop("user", None)  # Достаём `user`
+        if user_data:
+            user = instance.user
+            for attr, value in user_data.items():
+                setattr(user, attr, value)  # Обновляем данные пользователя
+            user.save()  # Сохраняем изменения
 
+        return super().update(instance, validated_data)
 
 
 

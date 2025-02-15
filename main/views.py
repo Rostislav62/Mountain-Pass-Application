@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from rest_framework.generics import RetrieveAPIView
+
 
 
 class SubmitDataView(APIView):
@@ -117,11 +117,37 @@ class UploadTrackView(APIView):
         return Response({"status": 200, "message": "Файл трека загружен"}, status=status.HTTP_201_CREATED)
 
 
-class SubmitDataDetailView(RetrieveAPIView):
-    """Получение данных о перевале по `id`"""
-    queryset = PerevalAdded.objects.all()
-    serializer_class = SubmitDataSerializer
+class SubmitDataUpdateView(APIView):
+    """Редактирование данных о перевале, если статус `new`"""
 
+    def patch(self, request, pk, *args, **kwargs):
+        print("PATCH-запрос получен")  # Проверяем, вызывается ли метод
 
+        try:
+            pereval = PerevalAdded.objects.get(pk=pk)
+        except PerevalAdded.DoesNotExist:
+            return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
 
+        # Проверяем статус перевала
+        if pereval.status != "new":
+            return Response(
+                {"state": 0, "message": "Редактирование запрещено: статус перевала не `new`"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        # Запрещаем редактировать ФИО, email и телефон
+        data = request.data.copy()
+        if "user" in data:
+            for field in ["fam", "name", "otc", "email", "phone"]:
+                if field in data["user"]:
+                    del data["user"][field]  # Удаляем запрещённые поля
+
+        serializer = SubmitDataSerializer(pereval, data=data, partial=True)  # ВАЖНО: `partial=True`
+
+        if serializer.is_valid():
+            print("🔍 Данные перед обновлением:", serializer.validated_data)  # Вывод в консоль для проверки
+            serializer.save()
+            return Response({"state": 1, "message": "Данные успешно обновлены"}, status=status.HTTP_200_OK)
+        else:
+            print("❌ Ошибка валидации:", serializer.errors)  # Вывод ошибок в консоль
+            return Response({"state": 0, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
