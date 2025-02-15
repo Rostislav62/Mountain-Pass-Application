@@ -4,16 +4,18 @@
 # from main.services.google_maps import get_google_map_link
 import traceback
 import os
-from main.serializers import SubmitDataSerializer
 from main.db_service import DatabaseService
 from main.models import PerevalImages, PerevalAdded
 from django.conf import settings
 from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-
+from rest_framework.generics import ListAPIView  # Импортируем базовый класс для списков
+from rest_framework.response import Response  # Импортируем объект Response
+from rest_framework import status  # Для указания HTTP-статусов
+# from django.shortcuts import get_object_or_404  # Удобный метод для получения объекта или 404
+from main.models import PerevalAdded  # Импортируем модель Перевала
+from main.serializers import SubmitDataSerializer  # Подключаем сериализатор
 
 
 class SubmitDataView(APIView):
@@ -151,3 +153,22 @@ class SubmitDataUpdateView(APIView):
         else:
             print("❌ Ошибка валидации:", serializer.errors)  # Вывод ошибок в консоль
             return Response({"state": 0, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SubmitDataListView(ListAPIView):
+    """Получение списка всех перевалов, отправленных пользователем по email."""
+
+    serializer_class = SubmitDataSerializer  # Используем уже существующий сериализатор
+    queryset = PerevalAdded.objects.all()  # Базовый QuerySet (отфильтруем позже)
+
+    def get_queryset(self):
+        """
+        Получаем `email` из параметров запроса и фильтруем перевалы.
+        Если email не передан — возвращаем пустой список.
+        """
+        email = self.request.query_params.get('user__email')  # Получаем email из URL-параметров
+
+        if not email:  # Если email не передан — возвращаем пустой список
+            return PerevalAdded.objects.none()
+
+        return PerevalAdded.objects.filter(user__email=email)  # Фильтруем по email
