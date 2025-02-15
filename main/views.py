@@ -1,5 +1,7 @@
 #  /Mountain Pass Application/main/views.py
 
+# from main.models import PerevalGpsTracks, PerevalAdded
+# from main.services.google_maps import get_google_map_link
 import traceback
 import os
 from main.serializers import SubmitDataSerializer
@@ -9,10 +11,9 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-# from main.models import PerevalGpsTracks, PerevalAdded
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from main.services.google_maps import get_google_map_link
+from rest_framework.generics import RetrieveAPIView
 
 
 class SubmitDataView(APIView):
@@ -110,10 +111,16 @@ class UploadTrackView(APIView):
         default_storage.save(full_path, ContentFile(track.read()))
 
         # Сохраняем путь в БД
-        track_record = PerevalGpsTracks.objects.create(pereval=pereval, track_path=file_path)
+        # track_record = PerevalGpsTracks.objects.create(pereval=pereval, track_path=file_path)
+        # return Response({"status": 200, "message": "Файл трека загружен", "track_id": track_record.id}, status=status.HTTP_201_CREATED)
 
-        return Response({"status": 200, "message": "Файл трека загружен", "track_id": track_record.id}, status=status.HTTP_201_CREATED)
+        return Response({"status": 200, "message": "Файл трека загружен"}, status=status.HTTP_201_CREATED)
 
+
+class SubmitDataDetailView(RetrieveAPIView):
+    """Получение данных о перевале по `id`"""
+    queryset = PerevalAdded.objects.all()
+    serializer_class = SubmitDataSerializer
 
 
 
