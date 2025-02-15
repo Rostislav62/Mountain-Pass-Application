@@ -18,12 +18,17 @@ from main.models import PerevalAdded  # Импортируем модель Пе
 from main.serializers import SubmitDataSerializer  # Подключаем сериализатор
 
 
+#  /Mountain Pass Application/main/views.py
 class SubmitDataView(APIView):
-    """API для приёма данных о перевале"""
+    """API для приёма и получения данных о перевале"""
 
     def post(self, request):
         """Обрабатывает POST-запрос с данными перевала"""
+        print("📥 Полученные данные:", request.data)
+
         try:
+            print("📥 Полученные данные:", request.data)
+
             serializer = SubmitDataSerializer(data=request.data)
 
             # Проверяем, что данные валидны
@@ -47,6 +52,17 @@ class SubmitDataView(APIView):
             traceback.print_exc()
             return Response({"status": 500, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def get(self, request):
+        """Получает список перевалов пользователя по email"""
+        email = request.query_params.get("user__email")
+
+        if not email:
+            return Response({"message": "Требуется email"}, status=status.HTTP_400_BAD_REQUEST)
+
+        perevals = PerevalAdded.objects.filter(user__email=email)
+        serializer = SubmitDataSerializer(perevals, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class UploadImageView(APIView):
     """API для загрузки изображений перевалов"""
@@ -78,7 +94,8 @@ class UploadImageView(APIView):
         default_storage.save(full_path, ContentFile(image.read()))
 
         # Сохраняем путь в БД
-        image_record = PerevalImages.objects.create(pereval=pereval, image_path=file_path)
+        image_record = PerevalImages.objects.create(pereval=pereval, data=file_path)
+
 
         return Response({"status": 200, "message": "Файл загружен", "image_id": image_record.id}, status=status.HTTP_201_CREATED)
 

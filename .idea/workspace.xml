@@ -21,6 +21,7 @@
       <change afterPath="$PROJECT_DIR$/main/tests/test_api.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/main/tests/test_db_service.py" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/main/urls.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pytest.ini" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

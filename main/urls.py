@@ -1,15 +1,18 @@
 #  /Mountain Pass Application/main/urls.py
-# from main.views import UploadTrackView, SubmitDataDetailView
-
-from django.urls import path
-from main.views import SubmitDataView, UploadImageView, SubmitDataUpdateView, SubmitDataListView
+from django.urls import path  # Импортируем path для маршрутов
+from main.views import SubmitDataUpdateView, SubmitDataListView, UploadImageView, SubmitDataView  # Импортируем нужные представления
 
 urlpatterns = [
-    # path('submitData/', SubmitDataView.as_view(), name='submit-data'),
+    # 📌 Маршрут для загрузки изображений
     path('uploadImage/', UploadImageView.as_view(), name='upload-image'),
-    # path('submitData/<int:pk>/', SubmitDataDetailView.as_view(), name='submit-data-detail'),
+
+    path('submitData/', SubmitDataView.as_view(), name='submit-data'),  # POST-запросы
+
+    # 📌 Маршрут для получения списка перевалов пользователя по email (GET /submitData/?user__email=<email>)
+    path('submitData/list/', SubmitDataListView.as_view(), name='submit-data-list'),
+
+    # 📌 Маршрут для редактирования существующего перевала (PATCH /submitData/<id>/)
     path('submitData/<int:pk>/', SubmitDataUpdateView.as_view(), name='submit-data-update'),
-    # Новый маршрут для получения перевалов по email
-    path('submitData/', SubmitDataListView.as_view(), name='submit-data-list'),
-    # path('uploadTrack/', UploadTrackView.as_view(), name='upload-track'),
+
+
 ]
