@@ -162,11 +162,11 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'HOST': os.getenv('FSTR_DB_HOST'),
-        'PORT': os.getenv('FSTR_DB_PORT'),
-        'NAME': os.getenv('FSTR_DB_NAME'),
-        'USER': os.getenv('FSTR_LOGIN'),
-        'PASSWORD': os.getenv('FSTR_PASS'),
+        'HOST': os.getenv('RAILWAY_DB_HOST'),
+        'PORT': os.getenv('RAILWAY_DB_PORT'),
+        'NAME': os.getenv('RAILWAY_DB_NAME'),
+        'USER': os.getenv('RAILWAY_DB_USER'),
+        'PASSWORD': os.getenv('RAILWAY_DB_PASS'),
     }
 }
 
