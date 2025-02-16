@@ -19,8 +19,9 @@ SECRET_KEY = 'django-insecure-err^oskgs2y1-p8x4v6c418r22dk9n9p#d*%eyhj_$i4*o75m(
 DEBUG = True
 DEBUG_PROPAGATE_EXCEPTIONS = True  # Выводим полные ошибки в консоль
 
-ALLOWED_HOSTS = []
+import os
 
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 
 # Application definition
 
@@ -155,7 +156,7 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 #         'USER': 'postgres',
 #         'PASSWORD': '1',
 #         'HOST': 'localhost',
-#         'PORT': os.getenv('FSTR_DB_PORT'),
+#         'PORT':5432,
 #     }
 # }
 
