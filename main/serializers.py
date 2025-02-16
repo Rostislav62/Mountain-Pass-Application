@@ -18,7 +18,7 @@ class CoordsSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя"""
 
-    email = serializers.EmailField(write_only=True)
+    email = serializers.EmailField(write_only=True, required=True)
     fam = serializers.CharField(required=True)  # Фамилия обязательна
     name = serializers.CharField(required=True)  # Имя обязательно
     phone = serializers.CharField(required=True)  # Телефон обязателен
