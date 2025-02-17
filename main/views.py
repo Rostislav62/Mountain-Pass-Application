@@ -24,7 +24,7 @@ class SubmitDataView(APIView):
 
     def post(self, request):
         """Обрабатывает POST-запрос с данными перевала"""
-        print("📥 Полученные данные:", request.data)
+        print("📥 Полученные данные:", request.data)   # ✅ Логируем входные данные
 
         try:
             print("📥 Полученные данные:", request.data)
@@ -34,6 +34,7 @@ class SubmitDataView(APIView):
             # Проверяем, что данные валидны
             if serializer.is_valid():
                 data = serializer.validated_data
+                print("✅ Валидированные данные:", data)  # ✅ Логируем после валидации
 
                 # Сохраняем данные в БД
                 pereval = DatabaseService.add_pereval(
@@ -45,6 +46,7 @@ class SubmitDataView(APIView):
                 return Response({"status": 200, "message": None, "id": pereval.id}, status=status.HTTP_201_CREATED)
 
             # Если данные невалидны – возвращаем ошибку
+            print("❌ Ошибка валидации:", serializer.errors)  # ✅ Логируем ошибки сериализации
             return Response({"status": 400, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:

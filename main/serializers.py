@@ -27,7 +27,9 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = '__all__'
 
-
+    def validate(self, data):
+        print("📤 Данные перед валидацией в UserSerializer:", data)  # ✅ Логируем данные
+        return data
 
     def create(self, validated_data):
         """Получаем пользователя по email или создаём нового"""
