@@ -1,9 +1,9 @@
 #  /Mountain Pass Application/config/settings.py
 
 from pathlib import Path
-import os
+# import os
+# import drf_yasg
 from dotenv import load_dotenv
-
 import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',  # Подключаем DRF
     'main',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -179,6 +180,8 @@ DATABASES = {
         ssl_require=True  # Обязательно для Railway
     )
 }
+
+
 
 
 
