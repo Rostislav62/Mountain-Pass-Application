@@ -1,9 +1,10 @@
 #  /Mountain Pass Application/config/settings.py
 
 from pathlib import Path
-import os
+# import os
+# import drf_yasg
 from dotenv import load_dotenv
-
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -34,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',  # Подключаем DRF
     'main',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -160,15 +162,28 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 #     }
 # }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'HOST': os.getenv('FSTR_DB_HOST'),
+#         'PORT': os.getenv('FSTR_DB_PORT'),
+#         'NAME': os.getenv('FSTR_DB_NAME'),
+#         'USER': os.getenv('FSTR_LOGIN'),
+#         'PASSWORD': os.getenv('FSTR_PASS'),
+#     }
+# }
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'HOST': os.getenv('FSTR_DB_HOST'),
-        'PORT': os.getenv('FSTR_DB_PORT'),
-        'NAME': os.getenv('FSTR_DB_NAME'),
-        'USER': os.getenv('FSTR_LOGIN'),
-        'PASSWORD': os.getenv('FSTR_PASS'),
-    }
+    'default': dj_database_url.config(
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True  # Обязательно для Railway
+    )
 }
+
+
+
+
+
 
 

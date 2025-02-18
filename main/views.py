@@ -18,7 +18,6 @@ from main.models import PerevalAdded  # Импортируем модель Пе
 from main.serializers import SubmitDataSerializer  # Подключаем сериализатор
 
 
-#  /Mountain Pass Application/main/views.py
 class SubmitDataView(APIView):
     """API для приёма и получения данных о перевале"""
 
