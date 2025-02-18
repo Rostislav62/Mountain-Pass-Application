@@ -2,6 +2,7 @@
 
 # from main.models import PerevalGpsTracks, PerevalAdded
 # from main.services.google_maps import get_google_map_link
+# from django.shortcuts import get_object_or_404  # Удобный метод для получения объекта или 404
 import traceback
 import os
 from main.db_service import DatabaseService
@@ -13,9 +14,9 @@ from django.core.files.base import ContentFile
 from rest_framework.generics import ListAPIView  # Импортируем базовый класс для списков
 from rest_framework.response import Response  # Импортируем объект Response
 from rest_framework import status  # Для указания HTTP-статусов
-# from django.shortcuts import get_object_or_404  # Удобный метод для получения объекта или 404
 from main.models import PerevalAdded  # Импортируем модель Перевала
 from main.serializers import SubmitDataSerializer  # Подключаем сериализатор
+from rest_framework.generics import RetrieveAPIView
 
 
 class SubmitDataView(APIView):
@@ -190,3 +191,9 @@ class SubmitDataListView(ListAPIView):
             return PerevalAdded.objects.none()
 
         return PerevalAdded.objects.filter(user__email=email)  # Фильтруем по email
+
+
+class SubmitDataDetailView(RetrieveAPIView):
+    """Получение информации о конкретном перевале"""
+    queryset = PerevalAdded.objects.all()
+    serializer_class = SubmitDataSerializer

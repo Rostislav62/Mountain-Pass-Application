@@ -1,7 +1,7 @@
 #  /Mountain Pass Application/main/tests/test_api.py
 # from main.models import PerevalGpsTracks  # Импортируем модели
 import pytest
-from rest_framework.test import APIClient  # Импортируем клиент для тестирования API
+from rest_framework.test import APIClient, APITestCase  # Импортируем клиент для тестирования API
 from django.urls import reverse  # Импортируем reverse для получения URL маршрутов
 from main.models import PerevalAdded, PerevalImages, Coords, User  # Импортируем модели
 from rest_framework import status
@@ -155,3 +155,139 @@ class TestSubmitDataAPI:
         assert isinstance(response.json(), list)  # Проверяем, что пришёл список
         assert len(response.json()) > 0  # Проверяем, что список не пустой
 
+
+class TestGetPerevalById(APITestCase):
+    """Тестирование эндпоинта GET /submitData/<id>/"""
+
+    def setUp(self):
+        """Создаём тестовые данные перед тестированием"""
+        self.user = User.objects.create(
+            email="test@example.com",
+            fam="Иванов",
+            name="Пётр",
+            otc="Александрович",
+            phone="+79999999999"
+        )
+
+        self.coords = Coords.objects.create(latitude=45.0, longitude=7.0, height=1200)
+
+        self.pereval = PerevalAdded.objects.create(
+            user=self.user,
+            coord=self.coords,
+            beautyTitle="пер. ",
+            title="Тестовый перевал",
+            other_titles="Альтернативное название",
+            connect="Долина реки",
+            status="new"
+        )
+
+        self.url = reverse("submit-data-detail", kwargs={"pk": self.pereval.id})  # ✅ Проверяем имя эндпоинта
+
+    def test_get_pereval_by_id(self):
+        """Проверяем получение информации о перевале по id"""
+        response = self.client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["title"] == "Тестовый перевал"
+
+
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
+from main.models import PerevalAdded, User, Coords
+
+class TestUpdatePereval(APITestCase):
+    """Тестирование PATCH /submitData/<id>/update/"""
+
+    def setUp(self):
+        """Создаём тестовые данные перед тестированием"""
+        self.user = User.objects.create(
+            email="test@example.com",
+            fam="Иванов",
+            name="Пётр",
+            otc="Александрович",
+            phone="+79999999999"
+        )
+
+        self.coords = Coords.objects.create(latitude=45.0, longitude=7.0, height=1200)
+
+        self.pereval = PerevalAdded.objects.create(
+            user=self.user,
+            coord=self.coords,
+            beautyTitle="пер. ",
+            title="Тестовый перевал",
+            other_titles="Альтернативное название",
+            connect="Долина реки",
+            status="new"  # Только new можно редактировать
+        )
+
+        self.url = reverse("submit-data-update", kwargs={"pk": self.pereval.id})  # ✅ Используем правильный маршрут
+
+    def test_patch_pereval(self):
+        """Проверяем обновление данных о перевале"""
+        payload = {
+            "title": "Обновлённый перевал",
+            "connect": "Обновлённое соединение"
+        }
+
+        response = self.client.patch(self.url, data=payload, format="json")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["state"] == 1  # Успешное обновление
+
+        # Проверяем, что данные изменились
+        self.pereval.refresh_from_db()
+        assert self.pereval.title == "Обновлённый перевал"
+        assert self.pereval.connect == "Обновлённое соединение"
+
+
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
+from main.models import PerevalAdded, User, Coords
+
+class TestGetPerevalsByUser(APITestCase):
+    """Тестирование GET /submitData/?user__email=<email>/"""
+
+    def setUp(self):
+        """Создаём тестовые данные перед тестированием"""
+        self.user = User.objects.create(
+            email="test@example.com",
+            fam="Иванов",
+            name="Пётр",
+            otc="Александрович",
+            phone="+79999999999"
+        )
+
+        self.coords = Coords.objects.create(latitude=45.0, longitude=7.0, height=1200)
+
+        # Создаём несколько тестовых перевалов для пользователя
+        self.pereval1 = PerevalAdded.objects.create(
+            user=self.user,
+            coord=self.coords,
+            beautyTitle="пер. ",
+            title="Первый перевал",
+            other_titles="Альтернативное название 1",
+            connect="Долина реки 1",
+            status="new"
+        )
+
+        self.pereval2 = PerevalAdded.objects.create(
+            user=self.user,
+            coord=self.coords,
+            beautyTitle="пер. ",
+            title="Второй перевал",
+            other_titles="Альтернативное название 2",
+            connect="Долина реки 2",
+            status="new"
+        )
+
+        self.url = reverse("submit-data-list") + f"?user__email={self.user.email}"
+
+    def test_get_perevals_by_user(self):
+        """Проверяем получение списка перевалов пользователя по email"""
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 2  # Проверяем, что вернулись 2 перевала
+        assert response.json()[0]["title"] == "Первый перевал"
+        assert response.json()[1]["title"] == "Второй перевал"
