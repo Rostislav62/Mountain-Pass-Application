@@ -1,7 +1,7 @@
 #  /Mountain Pass Application/config/settings.py
 
 from pathlib import Path
-# import os
+import os
 # import drf_yasg
 from dotenv import load_dotenv
 import dj_database_url
@@ -17,13 +17,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-err^oskgs2y1-p8x4v6c418r22dk9n9p#d*%eyhj_$i4*o75m('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+# DEBUG = False
 # DEBUG = True
+DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
+
 DEBUG_PROPAGATE_EXCEPTIONS = True  # Выводим полные ошибки в консоль
 
-import os
+# Для локального запускм
+# ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
+# ДЛя запуска на railway
+ALLOWED_HOSTS = ["mountain-pass-application-production.up.railway.app", "127.0.0.1"]
+
 
 # Application definition
 
@@ -70,7 +75,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -114,30 +118,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
-
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'handlers': {
-#         'file': {
-#             'level': 'DEBUG',
-#             'class': 'logging.FileHandler',
-#             'filename': 'debug.log',  # Логи будут записываться в этот файл
-#         },
-#         'console': {
-#             'level': 'DEBUG',
-#             'class': 'logging.StreamHandler',
-#         },
-#     },
-#     'loggers': {
-#         'django': {
-#             'handlers': ['file', 'console'],
-#             'level': 'DEBUG',
-#             'propagate': True,
-#         },
-#     },
-# }
-
 MEDIA_URL = '/media/'  # URL для доступа к медиа-файлам
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Директория для сохранения медиа
 
@@ -163,16 +143,6 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 #     }
 # }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'HOST': os.getenv('FSTR_DB_HOST'),
-#         'PORT': os.getenv('FSTR_DB_PORT'),
-#         'NAME': os.getenv('FSTR_DB_NAME'),
-#         'USER': os.getenv('FSTR_LOGIN'),
-#         'PASSWORD': os.getenv('FSTR_PASS'),
-#     }
-# }
 
 DATABASES = {
     'default': dj_database_url.config(
@@ -183,8 +153,26 @@ DATABASES = {
 }
 
 
-
-
-
-
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'file': {
+#             'level': 'DEBUG',
+#             'class': 'logging.FileHandler',
+#             'filename': 'debug.log',  # Логи будут записываться в этот файл
+#         },
+#         'console': {
+#             'level': 'DEBUG',
+#             'class': 'logging.StreamHandler',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['file', 'console'],
+#             'level': 'DEBUG',
+#             'propagate': True,
+#         },
+#     },
+# }
 
