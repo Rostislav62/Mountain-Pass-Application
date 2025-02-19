@@ -5,6 +5,9 @@ import os
 # import drf_yasg
 from dotenv import load_dotenv
 import dj_database_url
+import mimetypes
+mimetypes.add_type("application/json", ".json", True)
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -151,6 +154,7 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 # }
 
 
+
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv("DATABASE_URL"),
@@ -158,6 +162,16 @@ DATABASES = {
         ssl_require=True  # Обязательно для Railway
     )
 }
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+}
+
+LOGIN_URL = None
 
 
 # LOGGING = {
