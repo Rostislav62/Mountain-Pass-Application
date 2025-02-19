@@ -8,6 +8,8 @@ from django.conf.urls.static import static
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from django.urls import get_resolver
+
 
 # Функция заглушка для главной страницы
 def index(request):
@@ -44,9 +46,9 @@ urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 schema_view = get_schema_view(
     openapi.Info(
-            title="Mountain Pass API",
-            default_version="v1",
-            description="Документация API для проекта Mountain Pass Application",
+        title="Mountain Pass API",
+        default_version="v1",
+        description="Документация API для проекта Mountain Pass Application",
     ),
     public=True,
     permission_classes=[permissions.AllowAny],
@@ -55,4 +57,15 @@ schema_view = get_schema_view(
 urlpatterns += [
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+]
+
+
+def list_urls(request):
+    """Выводит все маршруты Django в JSON-формате."""
+    urls = [str(url.pattern) for url in get_resolver().url_patterns]
+    return JsonResponse({"routes": urls})
+
+
+urlpatterns += [
+    path('debug/urls/', list_urls),  # Временный эндпоинт для просмотра маршрутов
 ]
