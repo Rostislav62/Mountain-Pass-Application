@@ -9,6 +9,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.urls import get_resolver
+from rest_framework.authentication import SessionAuthentication
 
 
 # Функция заглушка для главной страницы
@@ -44,6 +45,7 @@ urlpatterns = [
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+
 schema_view = get_schema_view(
     openapi.Info(
         title="Mountain Pass API",
@@ -51,15 +53,17 @@ schema_view = get_schema_view(
         description="Документация API для проекта Mountain Pass Application",
     ),
     public=True,
-    authentication_classes=[],  # Отключаем аутентификацию
-    permission_classes=[permissions.AllowAny],  # Разрешаем доступ всем
+    authentication_classes=[],  # Полностью убираем любую аутентификацию
+    permission_classes=[permissions.AllowAny],  # Swagger должен быть доступен всем
 )
 
+# Отключаем редирект на логин
 urlpatterns += [
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    re_path(r'^swagger.json$', schema_view.without_ui(cache_timeout=0), name='schema-json'),  # Добавляем Swagger JSON
+    re_path(r'^swagger.json$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
 ]
+
 
 
 def list_urls(request):
