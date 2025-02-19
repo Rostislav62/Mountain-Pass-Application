@@ -2,12 +2,10 @@
 
 from pathlib import Path
 import os
-# import drf_yasg
 from dotenv import load_dotenv
 import dj_database_url
 import mimetypes
-import django
-from django.contrib.auth.models import User
+
 
 
 mimetypes.add_type("application/json", ".json", True)
@@ -157,8 +155,6 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 #     }
 # }
 
-
-
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv("DATABASE_URL"),
@@ -202,10 +198,3 @@ LOGIN_URL = None
 #     },
 # }
 
-
-
-django.setup()
-
-if not User.objects.filter(username="admin").exists():
-    User.objects.create_superuser("admin", "admin@example.com", "AdminPassword123")
-    print("Суперпользователь создан: admin / AdminPassword123")
