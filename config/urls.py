@@ -51,7 +51,8 @@ schema_view = get_schema_view(
         description="Документация API для проекта Mountain Pass Application",
     ),
     public=True,
-    permission_classes=[permissions.AllowAny],
+    authentication_classes=[],  # Отключаем аутентификацию
+    permission_classes=[permissions.AllowAny],  # Разрешаем доступ всем
 )
 
 urlpatterns += [
