@@ -171,7 +171,7 @@ REST_FRAMEWORK = {
     ],
 }
 
-LOGIN_URL = None
+LOGIN_URL = "/admin/login/"
 
 
 # LOGGING = {
