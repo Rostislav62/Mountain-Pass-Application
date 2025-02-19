@@ -69,3 +69,7 @@ def list_urls(request):
 urlpatterns += [
     path('debug/urls/', list_urls),  # Временный эндпоинт для просмотра маршрутов
 ]
+
+urlpatterns += [
+    re_path(r'^swagger.json$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+]
