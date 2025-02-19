@@ -33,6 +33,7 @@ DEBUG_PROPAGATE_EXCEPTIONS = True  # Выводим полные ошибки в
 
 # ДЛя запуска на railway
 ALLOWED_HOSTS = ["mountain-pass-application-production.up.railway.app", "127.0.0.1"]
+CSRF_TRUSTED_ORIGINS = ["https://mountain-pass-application-production.up.railway.app"]
 
 
 # Application definition
