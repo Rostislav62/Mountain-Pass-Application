@@ -197,3 +197,14 @@ LOGIN_URL = "/admin/login/"
 #     },
 # }
 
+import django
+from django.contrib.auth.models import User
+
+django.setup()
+
+# Проверяем, существует ли уже суперпользователь
+if not User.objects.filter(username="admin").exists():
+    User.objects.create_superuser("admin", "admin@example.com", "AdminPassword123")
+    print("✅ Суперпользователь создан: admin / AdminPassword123")
+else:
+    print("ℹ️ Суперпользователь уже существует.")
