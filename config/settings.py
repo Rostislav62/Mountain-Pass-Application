@@ -127,7 +127,6 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
 MEDIA_URL = '/media/'  # URL для доступа к медиа-файлам
@@ -171,8 +170,8 @@ REST_FRAMEWORK = {
     ],
 }
 
-# LOGIN_URL = "/admin/login/"
-LOGIN_URL = None
+LOGIN_URL = "/admin/login/"
+# LOGIN_URL = None
 
 
 # LOGGING = {
