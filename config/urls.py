@@ -9,7 +9,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.urls import get_resolver
-
+from django.contrib.auth.models import User
 
 # Функция заглушка для главной страницы
 def index(request):
@@ -73,4 +73,12 @@ def list_urls(request):
 
 urlpatterns += [
     path('debug/urls/', list_urls),  # Временный эндпоинт для просмотра маршрутов
+]
+
+def check_admins(request):
+    admins = User.objects.filter(is_superuser=True).values("username", "email")
+    return JsonResponse({"superusers": list(admins)})
+
+urlpatterns += [
+    path('debug/admins/', check_admins),  # Временный эндпоинт
 ]
