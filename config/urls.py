@@ -78,9 +78,11 @@ def check_admins(request):
     admins = User.objects.filter(is_superuser=True).values("username", "email")
     return JsonResponse({"superusers": list(admins)})
 
+
 urlpatterns += [
     path('debug/admins/', check_admins),  # Временный эндпоинт
 ]
 
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.DEBUG: urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
