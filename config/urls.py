@@ -57,16 +57,12 @@ schema_view = get_schema_view(
     urlconf="config.urls",
 )
 
-
-
 # Отключаем редирект на логин
 urlpatterns += [
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     re_path(r'^swagger.json$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
 ]
-
-
 
 def list_urls(request):
     """Выводит все маршруты Django в JSON-формате."""
@@ -87,5 +83,4 @@ urlpatterns += [
 ]
 
 
-if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+if settings.DEBUG: urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
