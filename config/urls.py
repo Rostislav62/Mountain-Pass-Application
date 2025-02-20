@@ -84,3 +84,7 @@ def check_admins(request):
 urlpatterns += [
     path('debug/admins/', check_admins),  # Временный эндпоинт
 ]
+
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
