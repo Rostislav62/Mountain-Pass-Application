@@ -52,9 +52,11 @@ schema_view = get_schema_view(
         description="Документация API для проекта Mountain Pass Application",
     ),
     public=True,
-    authentication_classes=[],  # Полностью убираем любую аутентификацию
-    permission_classes=[permissions.AllowAny],  # Swagger должен быть доступен всем
+    authentication_classes=[],  # Убираем аутентификацию
+    permission_classes=[permissions.AllowAny],  # Доступ для всех
+    urlconf="config.urls"  # Указываем, что документация API работает с этим URLConf
 )
+
 
 # Отключаем редирект на логин
 urlpatterns += [
