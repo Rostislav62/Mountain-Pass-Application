@@ -184,6 +184,11 @@ REST_FRAMEWORK = {
 LOGIN_URL = "/admin/login/"
 # LOGIN_URL = None
 
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    # другие настройки
+}
+
 
 # LOGGING = {
 #     'version': 1,
