@@ -3,7 +3,7 @@
 
 import logging
 from rest_framework import serializers
-from main.models import PerevalAdded, Coords, User, PerevalImages, PerevalDifficulty
+from main.models import PerevalAdded, Coords, User, PerevalImages, PerevalDifficulty, Season, DifficultyLevel
 
 logger = logging.getLogger(__name__)  # Логируем данные для отладки
 
@@ -79,12 +79,15 @@ class PerevalImagesSerializer(serializers.ModelSerializer):
         fields = ['id', 'data', 'title']
 
 
-
 class PerevalDifficultySerializer(serializers.ModelSerializer):
     """Сериализатор уровня сложности"""
+
+    season = serializers.PrimaryKeyRelatedField(queryset=Season.objects.all())  # Передаём ID
+    difficulty = serializers.PrimaryKeyRelatedField(queryset=DifficultyLevel.objects.all())  # Передаём ID
+
     class Meta:
         model = PerevalDifficulty
-        fields = ['season', 'level']
+        fields = ['season', 'difficulty']
 
 
 class SubmitDataSerializer(serializers.ModelSerializer):
