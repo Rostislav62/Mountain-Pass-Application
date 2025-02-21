@@ -326,3 +326,55 @@ class SubmitDataReplaceView(UpdateAPIView):
             return Response({"state": 1, "message": "Перевал успешно обновлён"}, status=status.HTTP_200_OK)
 
         return Response({"state": 0, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    class SubmitDataDeleteView(APIView):
+        """Удаление перевала (DELETE)"""
+
+        @swagger_auto_schema(
+            responses={
+                200: "Перевал удалён",
+                400: "Удаление запрещено: статус не `new`",
+                404: "Перевал не найден"
+            }
+        )
+        def delete(self, request, pk, *args, **kwargs):
+            """Удаляет перевал, если статус `new`"""
+            try:
+                pereval = PerevalAdded.objects.get(pk=pk)
+            except PerevalAdded.DoesNotExist:
+                return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+            if pereval.status != "new":
+                return Response(
+                    {"state": 0, "message": "Удаление запрещено: статус перевала не `new`"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            pereval.delete()
+            return Response({"state": 1, "message": "Перевал успешно удалён"}, status=status.HTTP_200_OK)
+
+class SubmitDataDeleteView(APIView):
+    """Удаление перевала (DELETE)"""
+
+    @swagger_auto_schema(
+        responses={
+            200: "Перевал удалён",
+            400: "Удаление запрещено: статус не `new`",
+            404: "Перевал не найден"
+        }
+    )
+    def delete(self, request, pk, *args, **kwargs):
+        """Удаляет перевал, если статус `new`"""
+        try:
+            pereval = PerevalAdded.objects.get(pk=pk)
+        except PerevalAdded.DoesNotExist:
+            return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        if pereval.status != "new":
+            return Response(
+                {"state": 0, "message": "Удаление запрещено: статус перевала не `new`"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        pereval.delete()
+        return Response({"state": 1, "message": "Перевал успешно удалён"}, status=status.HTTP_200_OK)
