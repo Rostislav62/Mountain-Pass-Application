@@ -188,11 +188,17 @@ class SubmitDataUpdateView(APIView):
 
     def patch(self, request, pk, *args, **kwargs):
         print("PATCH-запрос получен")  # Проверяем, вызывается ли метод
+        user_email = request.user.email  # Берём email из JWT-токена
 
         try:
             pereval = PerevalAdded.objects.get(pk=pk)
         except PerevalAdded.DoesNotExist:
             return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        # 🔒 Проверяем, является ли пользователь автором перевала
+        if pereval.user.email != user_email:
+            return Response({"state": 0, "message": "Вы не являетесь владельцем этого перевала"},
+                            status=status.HTTP_403_FORBIDDEN)
 
         # Проверяем статус перевала
         if pereval.status != "new":
@@ -283,35 +289,20 @@ class SubmitDataReplaceView(UpdateAPIView):
             404: "Перевал не найден"
         },
     )
-    # def put(self, request, pk, *args, **kwargs):
-    #     """Обрабатывает PUT-запрос на полное обновление перевала"""
-    #     try:
-    #         pereval = PerevalAdded.objects.get(pk=pk)
-    #     except PerevalAdded.DoesNotExist:
-    #         return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
-    #
-    #     print(f"🔍 Перевал {pereval.id} статус: {pereval.status}")
-    #
-    #     # Проверяем, можно ли обновлять (только если `new`)
-    #     if pereval.status != "new":
-    #         return Response(
-    #             {"state": 0, "message": "Редактирование запрещено: статус перевала не `new`"},
-    #             status=status.HTTP_400_BAD_REQUEST
-    #         )
-    #
-    #     # Полное обновление (включая удаление неуказанных полей)
-    #     serializer = self.get_serializer(pereval, data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response({"state": 1, "message": "Перевал успешно обновлён"}, status=status.HTTP_200_OK)
-    #
-    #     return Response({"state": 0, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
     def put(self, request, pk, *args, **kwargs):
         """Обрабатывает PUT-запрос на полное обновление перевала"""
+        user_email = request.user.email  # Берём email из JWT-токена
+
         try:
             pereval = PerevalAdded.objects.get(pk=pk)
         except PerevalAdded.DoesNotExist:
             return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        # 🔒 Проверяем, является ли пользователь автором перевала
+        if pereval.user.email != user_email:
+            return Response({"state": 0, "message": "Вы не являетесь владельцем этого перевала"},
+                            status=status.HTTP_403_FORBIDDEN)
 
         # Проверяем, можно ли обновлять (только если `new`)
         if pereval.status != "new":
@@ -339,10 +330,17 @@ class SubmitDataReplaceView(UpdateAPIView):
         )
         def delete(self, request, pk, *args, **kwargs):
             """Удаляет перевал, если статус `new`"""
+            user_email = request.user.email  # Берём email из JWT-токена
+
             try:
                 pereval = PerevalAdded.objects.get(pk=pk)
             except PerevalAdded.DoesNotExist:
                 return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+            # 🔒 Проверяем, является ли пользователь автором перевала
+            if pereval.user.email != user_email:
+                return Response({"state": 0, "message": "Вы не являетесь владельцем этого перевала"},
+                                status=status.HTTP_403_FORBIDDEN)
 
             if pereval.status != "new":
                 return Response(
