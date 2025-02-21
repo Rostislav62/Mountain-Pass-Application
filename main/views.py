@@ -23,7 +23,7 @@ from rest_framework.parsers import MultiPartParser, FormParser  # 📌 Доба�
 from main.serializers import UserSerializer
 from rest_framework.generics import UpdateAPIView
 from rest_framework.permissions import AllowAny
-
+from main.serializers import PerevalImagesSerializer  # Подключаем сериализатор
 
 
 class SubmitDataView(APIView):
@@ -378,3 +378,144 @@ class SubmitDataDeleteView(APIView):
 
         pereval.delete()
         return Response({"state": 1, "message": "Перевал успешно удалён"}, status=status.HTTP_200_OK)
+
+
+class DeletePerevalPhotoView(APIView):
+    """Удаление фотографии перевала (DELETE)"""
+
+    @swagger_auto_schema(
+        responses={
+            200: "Фотография удалена",
+            400: "Удаление запрещено: статус перевала не `new`",
+            404: "Фотография или перевал не найдены"
+        }
+    )
+    def delete(self, request, pk, photo_id, *args, **kwargs):
+        """Удаляет фотографию, если статус перевала `new`"""
+        try:
+            pereval = PerevalAdded.objects.get(pk=pk)
+        except PerevalAdded.DoesNotExist:
+            return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        if pereval.status != "new":
+            return Response(
+                {"state": 0, "message": "Удаление запрещено: статус перевала не `new`"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            photo = PerevalImages.objects.get(pk=photo_id, pereval=pereval)
+        except PerevalImages.DoesNotExist:
+            return Response({"state": 0, "message": "Фотография не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+        photo.delete()
+        return Response({"state": 1, "message": "Фотография успешно удалена"}, status=status.HTTP_200_OK)
+
+
+class PerevalPhotosListView(APIView):
+    """Получение списка фотографий перевала"""
+
+    @swagger_auto_schema(
+        responses={200: PerevalImagesSerializer(many=True)},
+    )
+    def get(self, request, pk, *args, **kwargs):
+        """Возвращает список фото для конкретного перевала"""
+        try:
+            pereval = PerevalAdded.objects.get(pk=pk)
+        except PerevalAdded.DoesNotExist:
+            return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        photos = PerevalImages.objects.filter(pereval=pereval)
+        serializer = PerevalImagesSerializer(photos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ModerationListView(APIView):
+    """Получение списка перевалов на модерацию (GET /api/moderation/)"""
+
+    @swagger_auto_schema(
+        responses={200: SubmitDataSerializer(many=True)}
+    )
+    def get(self, request, *args, **kwargs):
+        """Возвращает список перевалов со статусом `pending`"""
+        perevals = PerevalAdded.objects.filter(status="pending")
+        serializer = SubmitDataSerializer(perevals, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ApprovePerevalView(APIView):
+    """Подтверждение перевала (PUT /api/moderation/{id}/approve/)"""
+
+    @swagger_auto_schema(
+        responses={
+            200: "Перевал подтверждён",
+            404: "Перевал не найден",
+            400: "Перевал уже подтверждён или отклонён"
+        }
+    )
+    def put(self, request, pk, *args, **kwargs):
+        """Устанавливает статус `accepted`"""
+        try:
+            pereval = PerevalAdded.objects.get(pk=pk)
+        except PerevalAdded.DoesNotExist:
+            return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        if pereval.status != "pending":
+            return Response({"state": 0, "message": "Перевал уже обработан"}, status=status.HTTP_400_BAD_REQUEST)
+
+        pereval.status = "accepted"
+        pereval.save()
+
+        return Response({"state": 1, "message": "Перевал подтверждён"}, status=status.HTTP_200_OK)
+
+
+class RejectPerevalView(APIView):
+    """Отклонение перевала (PUT /api/moderation/{id}/reject/)"""
+
+    @swagger_auto_schema(
+        responses={
+            200: "Перевал отклонён",
+            404: "Перевал не найден",
+            400: "Перевал уже подтверждён или отклонён"
+        }
+    )
+    def put(self, request, pk, *args, **kwargs):
+        """Устанавливает статус `rejected`"""
+        try:
+            pereval = PerevalAdded.objects.get(pk=pk)
+        except PerevalAdded.DoesNotExist:
+            return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        if pereval.status != "pending":
+            return Response({"state": 0, "message": "Перевал уже обработан"}, status=status.HTTP_400_BAD_REQUEST)
+
+        pereval.status = "rejected"
+        pereval.save()
+
+        return Response({"state": 1, "message": "Перевал отклонён"}, status=status.HTTP_200_OK)
+
+
+class SubmitPerevalForModerationView(APIView):
+    """Отправка перевала на модерацию (PUT /api/passes/{id}/submit/)"""
+
+    @swagger_auto_schema(
+        responses={
+            200: "Перевал отправлен на модерацию",
+            400: "Перевал уже отправлен или подтверждён",
+            404: "Перевал не найден"
+        }
+    )
+    def put(self, request, pk, *args, **kwargs):
+        """Меняет статус перевала с `new` на `pending`"""
+        try:
+            pereval = PerevalAdded.objects.get(pk=pk)
+        except PerevalAdded.DoesNotExist:
+            return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        if pereval.status != "new":
+            return Response({"state": 0, "message": "Перевал уже отправлен или обработан"}, status=status.HTTP_400_BAD_REQUEST)
+
+        pereval.status = "pending"
+        pereval.save()
+
+        return Response({"state": 1, "message": "Перевал отправлен на модерацию"}, status=status.HTTP_200_OK)

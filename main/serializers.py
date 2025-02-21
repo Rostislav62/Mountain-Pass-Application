@@ -48,7 +48,7 @@ class PerevalImagesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PerevalImages
-        fields = ['data', 'title']
+        fields = ['id', 'data', 'title']
 
 
 
