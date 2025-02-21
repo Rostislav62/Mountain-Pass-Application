@@ -20,6 +20,7 @@ from rest_framework.generics import RetrieveAPIView
 from drf_yasg.utils import swagger_auto_schema  # 📌 Импортируем Swagger-декоратор
 from drf_yasg import openapi  # 📌 Импортируем для описания параметров
 from rest_framework.parsers import MultiPartParser, FormParser  # 📌 Добавляем поддержку загрузки файлов
+from main.serializers import UserSerializer
 
 
 class SubmitDataView(APIView):
@@ -238,3 +239,27 @@ class SubmitDataDetailView(RetrieveAPIView):
     """Получение информации о конкретном перевале"""
     queryset = PerevalAdded.objects.all()
     serializer_class = SubmitDataSerializer
+
+
+class RegisterView(APIView):
+    """Регистрация нового пользователя"""
+    @swagger_auto_schema(
+        request_body=UserSerializer,  # Указываем, что в тело запроса вводятся данные пользователя
+        responses={201: openapi.Response("Успешная регистрация", UserSerializer)},
+    )
+    def post(self, request):
+        """POST-запрос на создание нового пользователя"""
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            user = DatabaseService.add_user(
+                email=serializer.validated_data['email'],
+                fam=serializer.validated_data['fam'],
+                name=serializer.validated_data['name'],
+                otc=serializer.validated_data.get('otc', ''),
+                phone=serializer.validated_data['phone']
+            )
+            return Response({"message": "Пользователь успешно зарегистрирован", "user_id": user.id},
+                            status=status.HTTP_201_CREATED)
+
+        return Response({"message": "Ошибка валидации", "errors": serializer.errors},
+                        status=status.HTTP_400_BAD_REQUEST)
