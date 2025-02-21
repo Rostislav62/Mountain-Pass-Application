@@ -17,10 +17,13 @@ from rest_framework import status  # Для указания HTTP-статусо
 from main.models import PerevalAdded  # Импортируем модель Перевала
 from main.serializers import SubmitDataSerializer  # Подключаем сериализатор
 from rest_framework.generics import RetrieveAPIView
-from drf_yasg.utils import swagger_auto_schema  # 📌 Импортируем Swagger-декоратор
+from drf_yasg.utils import swagger_auto_schema  # 📌 Импортируем Swagger-декоратор Swagger-документация
 from drf_yasg import openapi  # 📌 Импортируем для описания параметров
 from rest_framework.parsers import MultiPartParser, FormParser  # 📌 Добавляем поддержку загрузки файлов
 from main.serializers import UserSerializer
+from rest_framework.generics import UpdateAPIView
+from rest_framework.permissions import AllowAny
+
 
 
 class SubmitDataView(APIView):
@@ -263,3 +266,63 @@ class RegisterView(APIView):
 
         return Response({"message": "Ошибка валидации", "errors": serializer.errors},
                         status=status.HTTP_400_BAD_REQUEST)
+
+
+class SubmitDataReplaceView(UpdateAPIView):
+    """Полное обновление перевала (PUT)"""
+
+    queryset = PerevalAdded.objects.all()
+    serializer_class = SubmitDataSerializer
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        request_body=SubmitDataSerializer,  # Запрос с полными данными
+        responses={
+            200: openapi.Response("Перевал обновлён", SubmitDataSerializer),
+            400: "Обновление запрещено: статус не `new`",
+            404: "Перевал не найден"
+        },
+    )
+    # def put(self, request, pk, *args, **kwargs):
+    #     """Обрабатывает PUT-запрос на полное обновление перевала"""
+    #     try:
+    #         pereval = PerevalAdded.objects.get(pk=pk)
+    #     except PerevalAdded.DoesNotExist:
+    #         return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+    #
+    #     print(f"🔍 Перевал {pereval.id} статус: {pereval.status}")
+    #
+    #     # Проверяем, можно ли обновлять (только если `new`)
+    #     if pereval.status != "new":
+    #         return Response(
+    #             {"state": 0, "message": "Редактирование запрещено: статус перевала не `new`"},
+    #             status=status.HTTP_400_BAD_REQUEST
+    #         )
+    #
+    #     # Полное обновление (включая удаление неуказанных полей)
+    #     serializer = self.get_serializer(pereval, data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response({"state": 1, "message": "Перевал успешно обновлён"}, status=status.HTTP_200_OK)
+    #
+    #     return Response({"state": 0, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, pk, *args, **kwargs):
+        """Обрабатывает PUT-запрос на полное обновление перевала"""
+        try:
+            pereval = PerevalAdded.objects.get(pk=pk)
+        except PerevalAdded.DoesNotExist:
+            return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Проверяем, можно ли обновлять (только если `new`)
+        if pereval.status != "new":
+            return Response(
+                {"state": 0, "message": "Редактирование запрещено: статус перевала не `new`"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = SubmitDataSerializer(pereval, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"state": 1, "message": "Перевал успешно обновлён"}, status=status.HTTP_200_OK)
+
+        return Response({"state": 0, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
