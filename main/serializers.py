@@ -11,8 +11,36 @@ logger = logging.getLogger(__name__)  # Логируем данные для о�
 class CoordsSerializer(serializers.ModelSerializer):
     """Сериализатор для координат перевала"""
 
-    latitude = serializers.DecimalField(max_digits=9, decimal_places=6, coerce_to_string=False)
-    longitude = serializers.DecimalField(max_digits=9, decimal_places=6, coerce_to_string=False)
+
+    latitude = serializers.DecimalField(
+        max_digits=9, decimal_places=6, coerce_to_string=False
+    )
+    longitude = serializers.DecimalField(
+        max_digits=9, decimal_places=6, coerce_to_string=False
+    )
+    height = serializers.IntegerField()
+
+    class Meta:
+        model = Coords
+        fields = '__all__'
+
+    def validate_latitude(self, value):
+        """Проверяем, что широта в пределах допустимых значений"""
+        if not (-90 <= value <= 90):
+            raise serializers.ValidationError("Широта должна быть в пределах от -90 до 90.")
+        return value
+
+    def validate_longitude(self, value):
+        """Проверяем, что долгота в пределах допустимых значений"""
+        if not (-180 <= value <= 180):
+            raise serializers.ValidationError("Долгота должна быть в пределах от -180 до 180.")
+        return value
+
+    def validate_height(self, value):
+        """Проверяем, что высота в пределах допустимых значений"""
+        if not (-500 <= value <= 9000):
+            raise serializers.ValidationError("Высота должна быть в пределах от -500 до 9000 метров.")
+        return value
 
     class Meta:
         model = Coords
