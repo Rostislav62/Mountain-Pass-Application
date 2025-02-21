@@ -6,7 +6,7 @@
 import traceback
 import os
 from main.db_service import DatabaseService
-from main.models import PerevalImages, PerevalAdded
+from main.models import PerevalImages
 from django.conf import settings
 from rest_framework.views import APIView
 from django.core.files.storage import default_storage
@@ -17,18 +17,24 @@ from rest_framework import status  # Для указания HTTP-статусо
 from main.models import PerevalAdded  # Импортируем модель Перевала
 from main.serializers import SubmitDataSerializer  # Подключаем сериализатор
 from rest_framework.generics import RetrieveAPIView
+from drf_yasg.utils import swagger_auto_schema  # 📌 Импортируем Swagger-декоратор
+from drf_yasg import openapi  # 📌 Импортируем для описания параметров
+from rest_framework.parsers import MultiPartParser, FormParser  # 📌 Добавляем поддержку загрузки файлов
 
 
 class SubmitDataView(APIView):
     """API для приёма и получения данных о перевале"""
 
+    @swagger_auto_schema(
+        request_body=SubmitDataSerializer,  # 📌 Позволяет вводить JSON в Swagger
+        manual_parameters=[],  # 📌 Убирает ненужные параметры в UI
+        responses={201: openapi.Response("Created", SubmitDataSerializer)},  # 📌 Описывает успешный ответ
+    )
     def post(self, request):
-        """Обрабатывает POST-запрос с данными перевала"""
-        print("📥 Полученные данные:", request.data)   # ✅ Логируем входные данные
+        """📌 POST: Создаёт новый перевал"""
+        print("📥 Полученные данные:", request.data)  # ✅ Логируем входные данные
 
         try:
-            print("📥 Полученные данные:", request.data)
-
             serializer = SubmitDataSerializer(data=request.data)
 
             # Проверяем, что данные валидны
@@ -50,12 +56,23 @@ class SubmitDataView(APIView):
             return Response({"status": 400, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
-            # Выводим полную трассировку ошибки в консоль
-            traceback.print_exc()
+            traceback.print_exc()  # Выводим полную трассировку ошибки в консоль
             return Response({"status": 500, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "user__email",
+                openapi.IN_QUERY,
+                description="📌 Email пользователя для фильтрации перевалов",
+                type=openapi.TYPE_STRING,
+                required=True,
+            )
+        ],
+        responses={200: SubmitDataSerializer(many=True)},  # 📌 Описывает успешный ответ
+    )
     def get(self, request):
-        """Получает список перевалов пользователя по email"""
+        """📌 GET: Получает список перевалов пользователя по email"""
         email = request.query_params.get("user__email")
 
         if not email:
@@ -66,15 +83,39 @@ class SubmitDataView(APIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-class UploadImageView(APIView):
-    """API для загрузки изображений перевалов"""
 
+class UploadImageView(APIView):
+    """📌 API для загрузки изображений перевалов"""
+
+    parser_classes = (MultiPartParser, FormParser)  # 📌 Поддержка multipart/form-data
+
+    @swagger_auto_schema(
+        operation_description="📌 Загрузка изображения для перевала",
+        manual_parameters=[
+            openapi.Parameter(
+                'pereval_id',
+                openapi.IN_FORM,
+                description="📌 ID перевала, к которому прикрепляется изображение",
+                type=openapi.TYPE_INTEGER,
+                required=True
+            ),
+            openapi.Parameter(
+                'image',
+                openapi.IN_FORM,
+                description="📌 Файл изображения",
+                type=openapi.TYPE_FILE,
+                required=True
+            )
+        ],
+        responses={201: openapi.Response("Файл загружен")}
+    )
     def post(self, request):
-        """Принимает изображение, сохраняет его и записывает в БД"""
+        """📌 Принимает изображение, сохраняет его и записывает в БД"""
 
         # Проверяем, есть ли файл в запросе
         if 'image' not in request.FILES:
-            return Response({"status": 400, "message": "Файл изображения обязателен"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"status": 400, "message": "Файл изображения обязателен"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         image = request.FILES['image']
         pereval_id = request.data.get('pereval_id')
@@ -96,10 +137,10 @@ class UploadImageView(APIView):
         default_storage.save(full_path, ContentFile(image.read()))
 
         # Сохраняем путь в БД
-        image_record = PerevalImages.objects.create(pereval=pereval, data=file_path)
+        image_record = PerevalImages.objects.create(pereval=pereval, data=file_path, title=image.name)
 
-
-        return Response({"status": 200, "message": "Файл загружен", "image_id": image_record.id}, status=status.HTTP_201_CREATED)
+        return Response({"status": 201, "message": "Файл загружен", "image_id": image_record.id},
+                        status=status.HTTP_201_CREATED)
 
 
 class UploadTrackView(APIView):

@@ -32,7 +32,15 @@ DEBUG_PROPAGATE_EXCEPTIONS = True  # Выводим полные ошибки в
 # ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 
 # ДЛя запуска на railway
-ALLOWED_HOSTS = ["mountain-pass-application-production.up.railway.app", "127.0.0.1"]
+ALLOWED_HOSTS = [
+    "mountain-pass-application-production.up.railway.app",  # Продакшн-домен на Railway
+    "127.0.0.1",  # Локальный хост для разработки
+    "localhost",  # Используется для локального запуска Django
+    ".ngrok-free.app",  # Разрешает все поддомены Ngrok
+]
+
+
+
 CSRF_TRUSTED_ORIGINS = ["https://mountain-pass-application-production.up.railway.app"]
 
 
@@ -145,29 +153,30 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 #
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'mountain_pass_db',
-#         'USER': 'postgres',
-#         'PASSWORD': '1',
-#         'HOST': 'localhost',
-#         'PORT':5432,
-#     }
-# }
-
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=True  # Обязательно для Railway
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mountain_pass_db',
+        'USER': 'postgres',
+        'PASSWORD': '1',
+        'HOST': 'localhost',
+        'PORT':5432,
+    }
 }
+#
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default=os.getenv("DATABASE_URL"),
+#         conn_max_age=600,
+#         ssl_require=True  # Обязательно для Railway
+#     )
+# }
 
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',  # Добавляем только BasicAuth
+        'rest_framework_simplejwt.authentication.JWTAuthentication',   # Добавляем JWT
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
@@ -184,10 +193,19 @@ REST_FRAMEWORK = {
 
 LOGIN_URL = "/admin/login/"
 # LOGIN_URL = None
-
 SWAGGER_SETTINGS = {
-    'USE_SESSION_AUTH': False,
-    # другие настройки
+    'USE_SESSION_AUTH': False,  # Отключаем стандартную авторизацию Django
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    },
+    'DEFAULT_MODEL_RENDERING': 'example',  # Позволяет вводить данные в JSON-формате
+    'SHOW_REQUEST_HEADERS': True,  # Показывает заголовки запросов
+    'DOC_EXPANSION': 'list',  # Раскрывает список методов API
+    'SUPPORTED_SUBMIT_METHODS': ["get", "post", "put", "patch", "delete"],
 }
 
 

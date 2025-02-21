@@ -10,6 +10,8 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.urls import get_resolver
 from django.contrib.auth.models import User
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
 
 # Функция заглушка для главной страницы
 def index(request):
@@ -20,7 +22,10 @@ urlpatterns = [
     path('', index),  # Теперь корневой URL отвечает JSON-сообщением
     path('admin/', admin.site.urls),
     path('api/', include('main.urls')),  # Подключаем API
+    path('api/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # Эндпоинт для получения токена
+    path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Эндпоинт для обновления токена
 ]
+
 
 # Добавляем маршруты для обработки медиа-файлов **только в режиме DEBUG**
 # if settings.DEBUG:

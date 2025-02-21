@@ -25,7 +25,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = '__all__'
+        # fields = '__all__'
+        fields = ['email', 'fam', 'name', 'otc', 'phone']
 
     def validate(self, data):
         print("📤 Данные перед валидацией в UserSerializer:", data)  # ✅ Логируем данные

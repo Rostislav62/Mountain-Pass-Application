@@ -1,37 +1,57 @@
-# 🏔️ Mountain Pass Application
+Mountain Pass Application
 
-**Mountain Pass Application** – это REST API для регистрации и просмотра информации о горных перевалах.  
-Проект позволяет пользователям добавлять данные о перевалах, редактировать их, просматривать статусы модерации.
+Mountain Pass Application – это REST API для регистрации и просмотра информации о горных перевалах.
+Проект позволяет пользователям добавлять данные о перевалах, редактировать их и просматривать статусы модерации.
 
-## 🚀 Функционал API
+Функционал API
+•	Регистрация перевалов
+•	Редактирование перевалов (если статус new)
+•	Просмотр статусов модерации
+•	Получение списка всех отправленных пользователем перевалов
+•	Swagger-документация API
 
-✅ Регистрация перевалов  
-✅ Редактирование перевалов (если статус `new`)  
-✅ Просмотр статусов модерации  
-✅ Получение списка всех отправленных пользователем перевалов  
-✅ Поддержка Swagger-документации  
+Разворачивание локально
 
----
+1.	Клонирование репозитория
+git clone https://github.com/Rostislav62/Mountain-Pass-Application.git
+cd Mountain-Pass-Application
 
-## 🛠️ **Как развернуть локально**
-### 🔹 **1. Клонировать репозиторий**
-```bash
-git clone https://github.com/your-username/mountain-pass-app.git
-cd mountain-pass-app
+2.	Установка зависимостей и запуск сервера
+python -m venv venv
+source venv/bin/activate  # Для Linux/macOS
+venv\Scripts\activate      # Для Windows
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
 
+После запуска сервер доступен по адресу:
+http://127.0.0.1:8000/
 
 Документация API
-✅ Swagger UI:
-🔗 https://mountain-pass-application-production.up.railway.app/swagger/
+Swagger UI позволяет тестировать API в браузере.
 
-✅ ReDoc:
-🔗 https://mountain-pass-application-production.up.railway.app/redoc/
+Продакшен:
+https://mountain-pass-application-production.up.railway.app/swagger/
 
+Локально:
+http://127.0.0.1:8000/swagger/
+
+ReDoc:
+https://mountain-pass-application-production.up.railway.app/redoc/
+
+Как тестировать API в Postman
+1.	Открыть Postman
+2.	Добавить новый запрос, ввести URL и метод (GET, POST, PATCH)
+3.	Перейти во вкладку "Body", выбрать raw, затем JSON
+4.	Ввести JSON-данные запроса
+5.	Нажать "Send"
 
 Примеры API-запросов
-🔹 1. Создание нового перевала (POST /api/submitData/)
-📍 URL: https://mountain-pass-application-production.up.railway.app/api/submitData/
-📥 Тело запроса (JSON):
+
+Создание нового перевала (POST /api/submitData/)
+URL:
+https://mountain-pass-application-production.up.railway.app/api/submitData/
+Тело запроса (JSON):
 {
     "beautyTitle": "пер. ",
     "title": "Пхия",
@@ -53,16 +73,18 @@ cd mountain-pass-app
     "difficulties": [],
     "images": []
 }
-📤 Ответ (JSON):
+
+Ответ (JSON):
 {
     "status": 200,
     "message": null,
     "id": 1
 }
 
-🔹 2. Получение списка перевалов пользователя (GET /api/submitData/?user__email=)
-📍 URL: https://mountain-pass-application-production.up.railway.app/api/submitData/?user__email=test@example.com
-📤 Ответ (JSON):
+Получение списка перевалов пользователя (GET /api/submitData/?user__email=)
+URL:
+https://mountain-pass-application-production.up.railway.app/api/submitData/?user__email=test@example.com
+Ответ (JSON):
 [
     {
         "beautyTitle": "пер. ",
@@ -89,22 +111,23 @@ cd mountain-pass-app
     }
 ]
 
-🔹 3. Редактирование перевала (PATCH /api/submitData/<id>/)
-📍 URL: https://mountain-pass-application-production.up.railway.app/api/submitData/1/
-📥 Тело запроса (JSON):
+Редактирование перевала (PATCH /api/submitData/<id>/)
+URL:
+https://mountain-pass-application-production.up.railway.app/api/submitData/1/
+Тело запроса (JSON):
 {
     "title": "Новый Пхия",
     "connect": "Долина реки Ингуш"
 }
 
-📤 Ответ (JSON):
+Ответ (JSON):
 {
     "state": 1,
     "message": "Данные успешно обновлены"
 }
 
-✨ Контакты
-Разработчик:
-📧 Email: test@example.com
-🔗 GitHub: https://github.com/your-username/mountain-pass-app
+
+Контакты
+Email: smigliuc@mail.ru
+GitHub: https://github.com/Rostislav62/Mountain-Pass-Application
 
