@@ -24,6 +24,11 @@ from main.serializers import UserSerializer
 from rest_framework.generics import UpdateAPIView
 from rest_framework.permissions import AllowAny
 from main.serializers import PerevalImagesSerializer  # Подключаем сериализатор
+from main.models import ApiSettings  # Импортируем модель
+from django.contrib.auth.decorators import login_required  # Проверяем администратора
+from rest_framework.permissions import IsAdminUser  # Только админы могут изменять настройку
+from rest_framework.generics import RetrieveUpdateAPIView  # Используем API для получения/изменения
+from main.serializers import ApiSettingsSerializer
 
 
 class SubmitDataView(APIView):
@@ -517,3 +522,21 @@ class SubmitPerevalForModerationView(APIView):
         pereval.save()
 
         return Response({"state": 1, "message": "Перевал отправлен на модерацию"}, status=status.HTTP_200_OK)
+
+
+class ApiSettingsView(RetrieveUpdateAPIView):
+    """Управление настройками API (авторизация)"""
+
+    queryset = ApiSettings.objects.all()
+    serializer_class = ApiSettingsSerializer  # Создадим этот сериализатор ниже
+    permission_classes = [IsAdminUser]  # Только администраторы могут изменять настройку
+
+    def get_object(self):
+        """Получаем или создаём объект с настройками API"""
+        obj, created = ApiSettings.objects.get_or_create(id=1)  # Убеждаемся, что запись есть
+        return obj
+
+    def perform_update(self, serializer):
+        """Логируем, кто изменил настройку"""
+        instance = serializer.save(updated_by=self.request.user)
+        print(f"⚙️ API Authentication изменена: {instance.require_authentication} (by {self.request.user})")

@@ -3,14 +3,14 @@
 
 import logging
 from rest_framework import serializers
-from main.models import PerevalAdded, Coords, User, PerevalImages, PerevalDifficulty, Season, DifficultyLevel
+from main.models import PerevalAdded, Coords, User, PerevalImages, PerevalDifficulty, Season, DifficultyLevel, \
+    ApiSettings
 
 logger = logging.getLogger(__name__)  # Логируем данные для отладки
 
 
 class CoordsSerializer(serializers.ModelSerializer):
     """Сериализатор для координат перевала"""
-
 
     latitude = serializers.DecimalField(
         max_digits=9, decimal_places=6, coerce_to_string=False
@@ -45,7 +45,6 @@ class CoordsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coords
         fields = '__all__'
-
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -98,6 +97,7 @@ class SubmitDataSerializer(serializers.ModelSerializer):
     difficulties = PerevalDifficultySerializer(many=True)  # Теперь список сложностей
 
     images = PerevalImagesSerializer(many=True, required=True)
+
     class Meta:
         model = PerevalAdded
         fields = ['beautyTitle', 'title', 'other_titles', 'connect', 'add_time', 'user', 'coord', 'status',
@@ -171,4 +171,10 @@ class SubmitDataSerializer(serializers.ModelSerializer):
         return instance
 
 
+class ApiSettingsSerializer(serializers.ModelSerializer):
+    """Сериализатор для настройки API"""
 
+    class Meta:
+        model = ApiSettings
+        fields = ['require_authentication', 'updated_at', 'updated_by']
+        read_only_fields = ['updated_at', 'updated_by']  # Эти поля нельзя изменять вручную

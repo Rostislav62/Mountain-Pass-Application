@@ -5,15 +5,12 @@ import os
 from dotenv import load_dotenv
 import dj_database_url
 import mimetypes
-
-
+from django.apps import apps
 
 mimetypes.add_type("application/json", ".json", True)
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -39,10 +36,7 @@ ALLOWED_HOSTS = [
     ".ngrok-free.app",  # Разрешает все поддомены Ngrok
 ]
 
-
-
 CSRF_TRUSTED_ORIGINS = ["https://mountain-pass-application-production.up.railway.app"]
-
 
 # Application definition
 
@@ -89,7 +83,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -107,7 +100,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -131,7 +123,6 @@ STATICFILES_DIRS = [
     BASE_DIR / "staticfiles/drf-yasg/swagger-ui-dist",  # Добавляем путь к Swagger UI
 ]
 
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -141,7 +132,6 @@ TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
 MEDIA_URL = '/media/'  # URL для доступа к медиа-файлам
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Директория для сохранения медиа
-
 
 load_dotenv()  # Загружаем переменные из .env
 
@@ -160,9 +150,11 @@ DATABASES = {
         'USER': 'postgres',
         'PASSWORD': '1',
         'HOST': 'localhost',
-        'PORT':5432,
+        'PORT': 5432,
     }
 }
+
+
 #
 # DATABASES = {
 #     'default': dj_database_url.config(
@@ -173,24 +165,33 @@ DATABASES = {
 # }
 
 
+def get_api_permissions():
+    """Определяет, требует ли API авторизацию (запускается после загрузки моделей)"""
+    try:
+        if not apps.ready:  # Проверяем, загружены ли приложения Django
+            return ['rest_framework.permissions.AllowAny']  # 🔓 API открыт по умолчанию
+
+        ApiSettings = apps.get_model('main', 'ApiSettings')  # 🔥 Динамически загружаем модель
+        settings_obj, created = ApiSettings.objects.get_or_create(id=1)
+
+        if settings_obj.require_authentication:
+            return ['rest_framework.permissions.IsAuthenticated']  # 🔒 Требует JWT
+    except Exception as e:
+        print(f"⚠ Ошибка получения настроек API: {e}")
+        return ['rest_framework.permissions.AllowAny']  # 🔓 В случае ошибки API открыт
+
+    return ['rest_framework.permissions.AllowAny']
+
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',  # Добавляем только BasicAuth
-        'rest_framework_simplejwt.authentication.JWTAuthentication',   # Добавляем JWT
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        # 'rest_framework.permissions.AllowAny',         # Любые пользователи
-        'rest_framework.permissions.IsAuthenticated',  # Только авторизованные пользователи
-    ],
+    'DEFAULT_PERMISSION_CLASSES': get_api_permissions(),  # Теперь загружается правильно
+    # 'rest_framework.permissions.AllowAny',         # Любые пользователи
+    # 'rest_framework.permissions.IsAuthenticated',  # Только авторизованные пользователи
 }
-
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': [],
-#     'DEFAULT_PERMISSION_CLASSES': [
-#         'rest_framework.permissions.AllowAny',
-#     ],
-# }
-
 
 LOGIN_URL = "/admin/login/"
 # LOGIN_URL = None
@@ -208,7 +209,6 @@ SWAGGER_SETTINGS = {
     'DOC_EXPANSION': 'list',  # Раскрывает список методов API
     'SUPPORTED_SUBMIT_METHODS': ["get", "post", "put", "patch", "delete"],
 }
-
 
 # LOGGING = {
 #     'version': 1,
@@ -232,4 +232,3 @@ SWAGGER_SETTINGS = {
 #         },
 #     },
 # }
-

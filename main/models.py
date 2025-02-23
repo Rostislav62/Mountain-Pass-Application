@@ -1,6 +1,9 @@
-from django.db import models
+#  /Mountain Pass Application/main/models.py
 
 from django.db import models
+
+# # Импортируем Season и DifficultyLevel перед их использованием
+# from main.models import Season, DifficultyLevel
 
 
 class User(models.Model):
@@ -12,6 +15,23 @@ class User(models.Model):
 
     def __str__(self):
         return self.email
+
+class DifficultyLevel(models.Model):
+    """Описание сложности перевала"""
+    code = models.CharField(max_length=2, unique=True)  # Например, '1A', '3B'
+    description = models.TextField(unique=True)  # Полное описание сложности
+
+    def __str__(self):
+        return self.description
+
+
+class Season(models.Model):
+    """Сезоны для перевалов"""
+    code = models.CharField(max_length=10, unique=True)  # Например, 'winter'
+    name = models.CharField(max_length=20, unique=True)  # Полное название (Зима, Лето)
+
+    def __str__(self):
+        return self.name
 
 
 class Coords(models.Model):
@@ -39,10 +59,6 @@ class PerevalAdded(models.Model):
     connect = models.TextField(blank=True, null=True)
     add_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='new')
-    # level_winter = models.CharField(max_length=10, blank=True, null=True)
-    # level_summer = models.CharField(max_length=10, blank=True, null=True)
-    # level_autumn = models.CharField(max_length=10, blank=True, null=True)
-    # level_spring = models.CharField(max_length=10, blank=True, null=True)
     route_description = models.TextField(blank=True, null=True)
     hazards = models.TextField(blank=True, null=True)
 
@@ -57,7 +73,6 @@ class PerevalImages(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.data})"
-
 
 
 # class PerevalGpsTracks(models.Model):
@@ -104,19 +119,27 @@ class WeatherInfo(models.Model):
         return f"Weather for {self.pereval.title} on {self.weather_date}"
 
 
-
 class PerevalDifficulty(models.Model):
-    """Уровень сложности перевала в разные сезоны"""
-    SEASON_CHOICES = [
-        ('winter', 'Зима'),
-        ('summer', 'Лето'),
-        ('autumn', 'Осень'),
-        ('spring', 'Весна')
-    ]
-
+    """Связь перевалов с уровнем сложности и сезоном"""
     pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE, related_name="difficulties")
-    season = models.CharField(max_length=10, choices=SEASON_CHOICES)
-    level = models.CharField(max_length=10)
+    season = models.ForeignKey(Season, on_delete=models.CASCADE)  # 🔥 Теперь сезон — внешний ключ
+    difficulty = models.ForeignKey(DifficultyLevel, on_delete=models.CASCADE, null=True, default=None)  # 🔥 Теперь сложность — внешний ключ
 
     class Meta:
         unique_together = ('pereval', 'season')  # Запрещаем дублирование данных для одного сезона
+
+    def __str__(self):
+        return f"{self.pereval.title}: {self.season.name} - {self.difficulty.description}"
+
+
+class ApiSettings(models.Model):
+    """Настройки API: управляет требованием авторизации"""
+
+    require_authentication = models.BooleanField(default=False)  # 🔥 По умолчанию API открыт
+    updated_at = models.DateTimeField(auto_now=True)  # Время последнего изменения
+    updated_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Кто изменил"
+    )  # Админ, который изменил настройку
+
+    def __str__(self):
+        return f"API Auth Required: {self.require_authentication}"
