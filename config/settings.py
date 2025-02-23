@@ -214,6 +214,7 @@ REST_FRAMEWORK = {
 LOGIN_URL = "/admin/login/"
 # LOGIN_URL = None
 SWAGGER_SETTINGS = {
+    'DEFAULT_INFO': 'config.urls.schema_view',
     'USE_SESSION_AUTH': False,  # Отключаем стандартную авторизацию Django
     'SECURITY_DEFINITIONS': {
         'Bearer': {
