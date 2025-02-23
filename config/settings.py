@@ -143,16 +143,29 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 #
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'mountain_pass_db',
+#         'USER': 'postgres',
+#         'PASSWORD': '1',
+#         'HOST': 'localhost',
+#         'PORT': 5432,
+#     }
+# }
+
+#  Для MySQL
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mountain_pass_db',
-        'USER': 'postgres',
-        'PASSWORD': '1',
-        'HOST': 'localhost',
-        'PORT': 5432,
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'rostislav62$default',  # Имя твоей базы
+        'USER': 'rostislav62',  # Имя твоего PythonAnywhere пользователя
+        'PASSWORD': '9KnetinHpa63hE5',  # MySQL пароль
+        'HOST': 'rostislav62.mysql.pythonanywhere-services.com',  # Хост базы
+        'PORT': '3306',
     }
 }
+
 
 
 #
