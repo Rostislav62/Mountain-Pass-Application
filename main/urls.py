@@ -1,9 +1,12 @@
 #  /Mountain Pass Application/main/urls.py
-from django.urls import path # Импортируем path для маршрутов
+from django.urls import path, include  # Импортируем path для маршрутов
 from main.views import (SubmitDataUpdateView, SubmitDataListView, UploadImageView, SubmitDataView, SubmitDataDetailView,
                         SubmitDataReplaceView, SubmitDataDeleteView, DeletePerevalPhotoView, PerevalPhotosListView,
                         ModerationListView, ApprovePerevalView, RejectPerevalView, SubmitPerevalForModerationView,
                         ApiSettingsView)  # Импортируем нужные представления
+from rest_framework.routers import DefaultRouter
+router = DefaultRouter()
+
 
 urlpatterns = [
     # Маршрут для загрузки изображений
@@ -46,4 +49,8 @@ urlpatterns = [
 
     # Управление настройками API
     path('api/settings/', ApiSettingsView.as_view(), name='api-settings'),
+
+    # Добавляем маршруты, например:
+    # router.register(r'perevals', views.PerevalViewSet, basename='pereval')
+    path('', include(router.urls)),  # Основные маршруты API
 ]
