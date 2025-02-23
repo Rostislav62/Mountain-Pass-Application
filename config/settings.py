@@ -125,7 +125,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
-    BASE_DIR / "staticfiles/drf-yasg/swagger-ui-dist",  # Добавляем путь к Swagger UI
+    # BASE_DIR / "staticfiles/drf-yasg/swagger-ui-dist",  # Добавляем путь к Swagger UI
 ]
 
 # Default primary key field type
