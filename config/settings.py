@@ -29,12 +29,17 @@ DEBUG_PROPAGATE_EXCEPTIONS = True  # Выводим полные ошибки в
 # ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 
 # ДЛя запуска на railway
-ALLOWED_HOSTS = [
-    "mountain-pass-application-production.up.railway.app",  # Продакшн-домен на Railway
-    "127.0.0.1",  # Локальный хост для разработки
-    "localhost",  # Используется для локального запуска Django
-    ".ngrok-free.app",  # Разрешает все поддомены Ngrok
-]
+# ALLOWED_HOSTS = [
+#     "mountain-pass-application-production.up.railway.app",  # Продакшн-домен на Railway
+#     "127.0.0.1",  # Локальный хост для разработки
+#     "localhost",  # Используется для локального запуска Django
+#     ".ngrok-free.app",  # Разрешает все поддомены Ngrok
+# ]
+
+
+# ДЛя запуска на pythonanywhere.com
+ALLOWED_HOSTS = ['rostislav62.pythonanywhere.com', '127.0.0.1', 'localhost']
+
 
 CSRF_TRUSTED_ORIGINS = ["https://mountain-pass-application-production.up.railway.app"]
 
