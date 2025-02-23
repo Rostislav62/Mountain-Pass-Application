@@ -47,27 +47,38 @@ class CoordsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор для пользователя"""
+from django.contrib.auth.models import User
+from rest_framework import serializers
+from main.models import UserProfile
 
-    email = serializers.EmailField(write_only=False, required=True)
-    fam = serializers.CharField(required=False)  # Фамилия обязательна
-    name = serializers.CharField(required=False)  # Имя обязательно
-    phone = serializers.CharField(required=False)  # Телефон обязателен
+class UserProfileSerializer(serializers.ModelSerializer):
+    """Сериализатор профиля пользователя"""
+
+    class Meta:
+        model = UserProfile
+        fields = ['middle_name', 'phone']
+
+class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор пользователя с профилем"""
+
+    profile = UserProfileSerializer()
 
     class Meta:
         model = User
-        # fields = '__all__'
-        fields = ['email', 'fam', 'name', 'otc', 'phone']
+        fields = ['id', 'username', 'email', 'profile']
 
-    def validate(self, data):
-        print("📤 Данные перед валидацией в UserSerializer:", data)  # ✅ Логируем данные
-        return data
+    def update(self, instance, validated_data):
+        """Обновляем данные пользователя и профиля"""
+        profile_data = validated_data.pop('profile', {})
+        instance = super().update(instance, validated_data)
 
-    def create(self, validated_data):
-        """Получаем пользователя по email или создаём нового"""
-        user, created = User.objects.get_or_create(email=validated_data['email'], defaults=validated_data)
-        return user
+        profile, created = UserProfile.objects.get_or_create(user=instance)
+        for attr, value in profile_data.items():
+            setattr(profile, attr, value)
+        profile.save()
+
+        return instance
+
 
 
 class PerevalImagesSerializer(serializers.ModelSerializer):
@@ -122,17 +133,6 @@ class SubmitDataSerializer(serializers.ModelSerializer):
 
         return pereval
 
-    # def update(self, instance, validated_data):
-    #     """Обновляем перевал"""
-    #     user_data = validated_data.pop("user", None)  # Достаём `user`
-    #     if user_data:
-    #         user = instance.user
-    #         for attr, value in user_data.items():
-    #             setattr(user, attr, value)  # Обновляем данные пользователя
-    #         user.save()  # Сохраняем изменения
-    #
-    #     return super().update(instance, validated_data)
-
     def update(self, instance, validated_data):
         """Оптимизированное обновление перевала"""
 
@@ -178,3 +178,6 @@ class ApiSettingsSerializer(serializers.ModelSerializer):
         model = ApiSettings
         fields = ['require_authentication', 'updated_at', 'updated_by']
         read_only_fields = ['updated_at', 'updated_by']  # Эти поля нельзя изменять вручную
+
+
+

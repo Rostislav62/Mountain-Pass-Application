@@ -29,6 +29,10 @@ from django.contrib.auth.decorators import login_required  # Проверяем 
 from rest_framework.permissions import IsAdminUser  # Только админы могут изменять настройку
 from rest_framework.generics import RetrieveUpdateAPIView  # Используем API для получения/изменения
 from main.serializers import ApiSettingsSerializer
+from rest_framework.generics import ListCreateAPIView, DestroyAPIView
+from rest_framework.response import Response
+from main.models import ModeratorGroup, User
+from main.permissions import IsSuperAdmin
 
 
 class SubmitDataView(APIView):
@@ -257,6 +261,7 @@ class SubmitDataDetailView(RetrieveAPIView):
 
 class RegisterView(APIView):
     """Регистрация нового пользователя"""
+
     @swagger_auto_schema(
         request_body=UserSerializer,  # Указываем, что в тело запроса вводятся данные пользователя
         responses={201: openapi.Response("Успешная регистрация", UserSerializer)},
@@ -294,7 +299,6 @@ class SubmitDataReplaceView(UpdateAPIView):
             404: "Перевал не найден"
         },
     )
-
     def put(self, request, pk, *args, **kwargs):
         """Обрабатывает PUT-запрос на полное обновление перевала"""
         user_email = request.user.email  # Берём email из JWT-токена
@@ -355,6 +359,7 @@ class SubmitDataReplaceView(UpdateAPIView):
 
             pereval.delete()
             return Response({"state": 1, "message": "Перевал успешно удалён"}, status=status.HTTP_200_OK)
+
 
 class SubmitDataDeleteView(APIView):
     """Удаление перевала (DELETE)"""
@@ -516,7 +521,8 @@ class SubmitPerevalForModerationView(APIView):
             return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
 
         if pereval.status != "new":
-            return Response({"state": 0, "message": "Перевал уже отправлен или обработан"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"state": 0, "message": "Перевал уже отправлен или обработан"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         pereval.status = "pending"
         pereval.save()
@@ -540,3 +546,39 @@ class ApiSettingsView(RetrieveUpdateAPIView):
         """Логируем, кто изменил настройку"""
         instance = serializer.save(updated_by=self.request.user)
         print(f"⚙️ API Authentication изменена: {instance.require_authentication} (by {self.request.user})")
+
+
+class ModeratorListView(ListCreateAPIView):
+    """Управление модераторами"""
+
+    queryset = ModeratorGroup.objects.all()
+    permission_classes = [IsSuperAdmin]  # Только супер-админ может управлять модераторами
+
+    def post(self, request, *args, **kwargs):
+        """Добавление модератора"""
+        user_id = request.data.get("user_id")
+        try:
+            user = User.objects.get(id=user_id)
+            if hasattr(user, "moderator_group"):
+                return Response({"error": "Пользователь уже модератор"}, status=status.HTTP_400_BAD_REQUEST)
+            ModeratorGroup.objects.create(user=user, added_by=request.user)
+            return Response({"message": "Модератор добавлен"}, status=status.HTTP_201_CREATED)
+        except User.DoesNotExist:
+            return Response({"error": "Пользователь не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ModeratorDeleteView(DestroyAPIView):
+    """Удаление модератора"""
+
+    queryset = ModeratorGroup.objects.all()
+    permission_classes = [IsSuperAdmin]  # Только супер-админ может удалять модераторов
+
+    def delete(self, request, *args, **kwargs):
+        """Удаление модератора"""
+        mod_id = kwargs.get("pk")
+        try:
+            moderator = ModeratorGroup.objects.get(id=mod_id)
+            moderator.delete()
+            return Response({"message": "Модератор удалён"}, status=status.HTTP_200_OK)
+        except ModeratorGroup.DoesNotExist:
+            return Response({"error": "Модератор не найден"}, status=status.HTTP_404_NOT_FOUND)

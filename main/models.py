@@ -1,20 +1,31 @@
 #  /Mountain Pass Application/main/models.py
 
 from django.db import models
-
+from django.contrib.auth.models import User
 # # Импортируем Season и DifficultyLevel перед их использованием
 # from main.models import Season, DifficultyLevel
 
 
-class User(models.Model):
-    email = models.EmailField(unique=True)
-    fam = models.CharField(max_length=100)
-    name = models.CharField(max_length=100)
-    otc = models.CharField(max_length=100, blank=True, null=True)
-    phone = models.CharField(max_length=20)
+class UserProfile(models.Model):
+    """Дополнительные данные для пользователей"""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    middle_name = models.CharField(max_length=100, blank=True, null=True, verbose_name="Отчество")
+    phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Телефон")
 
     def __str__(self):
-        return self.email
+        return f"{self.user.username} (Профиль)"
+
+
+class ModeratorGroup(models.Model):
+    """Группа модераторов"""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="moderator_group")
+    added_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="added_moderators")
+
+    def __str__(self):
+        return f"Модератор: {self.user.email} (Добавлен {self.added_by.email})"
+
 
 class DifficultyLevel(models.Model):
     """Описание сложности перевала"""
