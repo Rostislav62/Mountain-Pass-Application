@@ -30,7 +30,7 @@ class ModeratorGroup(models.Model):
 class DifficultyLevel(models.Model):
     """Описание сложности перевала"""
     code = models.CharField(max_length=2, unique=True)  # Например, '1A', '3B'
-    description = models.CharField(unique=True)  # Полное описание сложности
+    description = models.CharField(max_length=255, unique=True)  # Полное описание сложности
 
     def __str__(self):
         return self.description
@@ -67,11 +67,11 @@ class PerevalAdded(models.Model):
     beautyTitle = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
     other_titles = models.CharField(max_length=255, blank=True, null=True)
-    connect = models.CharField(blank=True, null=True)
+    connect = models.CharField(max_length=20, blank=True, null=True)
     add_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='new')
-    route_description = models.CharField(blank=True, null=True)
-    hazards = models.CharField(blank=True, null=True)
+    route_description = models.CharField(max_length=255, blank=True, null=True)
+    hazards = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -79,7 +79,7 @@ class PerevalAdded(models.Model):
 
 class PerevalImages(models.Model):
     pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE, related_name="images")
-    data = models.CharField(default="")  # Ссылка на изображение или бинарные данные
+    data = models.CharField(max_length=255, default="")  # Ссылка на изображение или бинарные данные
     title = models.CharField(max_length=255, default="")  # Описание изображения
 
     def __str__(self):
