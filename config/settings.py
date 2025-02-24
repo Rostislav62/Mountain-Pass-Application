@@ -2,11 +2,13 @@
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
+
 import mimetypes
 from django.apps import apps
 
-load_dotenv()  # Загружаем переменные из .env
+load_dotenv(find_dotenv())  # Загружаем переменные из .env
+
 mimetypes.add_type("application/json", ".json", True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -38,12 +40,14 @@ DEBUG_PROPAGATE_EXCEPTIONS = True  # Выводим полные ошибки в
 
 
 # ДЛя запуска на pythonanywhere.com
-ALLOWED_HOSTS = ['rostislav62.pythonanywhere.com', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "rostislav62.pythonanywhere.com").split(",")
 
 
 # CSRF_TRUSTED_ORIGINS = ["https://mountain-pass-application-production.up.railway.app"]
+# CSRF_TRUSTED_ORIGINS = ['https://rostislav62.pythonanywhere.com']
 
-CSRF_TRUSTED_ORIGINS = ['https://rostislav62.pythonanywhere.com']
+CSRF_TRUSTED_ORIGINS = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "https://rostislav62.pythonanywhere.com").split(",")
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -124,11 +128,11 @@ USE_TZ = True
 # STATIC_URL = 'static/'
 STATIC_URL = '/static/'
 # STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
+if os.path.exists(BASE_DIR / "static"):
+    STATICFILES_DIRS = [BASE_DIR / "static"]
     # BASE_DIR / "staticfiles/drf-yasg/swagger-ui-dist",  # Добавляем путь к Swagger UI
-]
+else:
+    STATICFILES_DIRS = []
 
 
 
@@ -176,11 +180,11 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('FSTR_DB_NAME'),
-        'USER': os.getenv('FSTR_DB_LOGIN'),
-        'PASSWORD': os.getenv('FSTR_DB_PASS'),
-        'HOST': os.getenv('FSTR_DB_HOST'),
-        'PORT': os.getenv('FSTR_DB_PORT'),
+        'NAME': os.getenv('FSTR_DB_NAME', 'default_db_name'),
+        'USER': os.getenv('FSTR_DB_LOGIN', 'default_user'),
+        'PASSWORD': os.getenv('FSTR_DB_PASS', 'default_pass'),
+        'HOST': os.getenv('FSTR_DB_HOST', '127.0.0.1'),
+        'PORT': os.getenv('FSTR_DB_PORT', '3306'),
     }
 }
 
