@@ -60,7 +60,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework',  # Подключаем DRF
     'main',
-
+    'dotenv',
 ]
 
 MIDDLEWARE = [
@@ -176,14 +176,25 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 # }
 
 #  Для MySQL
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': os.getenv('FSTR_DB_NAME', 'default_db_name'),
+#         'USER': os.getenv('FSTR_DB_LOGIN', 'default_user'),
+#         'PASSWORD': os.getenv('FSTR_DB_PASS', 'default_pass'),
+#         'HOST': os.getenv('FSTR_DB_HOST', '127.0.0.1'),
+#         'PORT': os.getenv('FSTR_DB_PORT', '3306'),
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('FSTR_DB_NAME', 'default_db_name'),
-        'USER': os.getenv('FSTR_DB_LOGIN', 'default_user'),
-        'PASSWORD': os.getenv('FSTR_DB_PASS', 'default_pass'),
-        'HOST': os.getenv('FSTR_DB_HOST', '127.0.0.1'),
-        'PORT': os.getenv('FSTR_DB_PORT', '3306'),
+        'NAME': 'rostislav62$default',
+        'USER': 'rostislav62',
+        'PASSWORD': '9KnetinHpa63hE5',
+        'HOST': 'rostislav62.mysql.pythonanywhere-services.com',
+        'PORT': '3306',
     }
 }
 
