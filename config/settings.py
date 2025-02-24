@@ -41,10 +41,10 @@ DEBUG_PROPAGATE_EXCEPTIONS = True  # Выводим полные ошибки в
 ALLOWED_HOSTS = ['rostislav62.pythonanywhere.com', '127.0.0.1', 'localhost']
 
 
-CSRF_TRUSTED_ORIGINS = ["https://mountain-pass-application-production.up.railway.app"]
+# CSRF_TRUSTED_ORIGINS = ["https://mountain-pass-application-production.up.railway.app"]
+CSRF_TRUSTED_ORIGINS = ['https://rostislav62.pythonanywhere.com']
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
