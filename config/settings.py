@@ -42,6 +42,7 @@ ALLOWED_HOSTS = ['rostislav62.pythonanywhere.com', '127.0.0.1', 'localhost']
 
 
 # CSRF_TRUSTED_ORIGINS = ["https://mountain-pass-application-production.up.railway.app"]
+
 CSRF_TRUSTED_ORIGINS = ['https://rostislav62.pythonanywhere.com']
 
 # Application definition
@@ -122,11 +123,14 @@ USE_TZ = True
 
 # STATIC_URL = 'static/'
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+# STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     BASE_DIR / "static",
     # BASE_DIR / "staticfiles/drf-yasg/swagger-ui-dist",  # Добавляем путь к Swagger UI
 ]
+
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -172,11 +176,11 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('FSTR_DB_NAME', 'rostislav62$default'),
-        'USER': os.getenv('FSTR_DB_LOGIN', 'rostislav62'),
-        'PASSWORD': os.getenv('FSTR_DB_PASS', ''),
-        'HOST': os.getenv('FSTR_DB_HOST', 'rostislav62.mysql.pythonanywhere-services.com'),
-        'PORT': os.getenv('FSTR_DB_PORT', '3306'),
+        'NAME': os.getenv('FSTR_DB_NAME'),
+        'USER': os.getenv('FSTR_DB_LOGIN'),
+        'PASSWORD': os.getenv('FSTR_DB_PASS'),
+        'HOST': os.getenv('FSTR_DB_HOST'),
+        'PORT': os.getenv('FSTR_DB_PORT'),
     }
 }
 
