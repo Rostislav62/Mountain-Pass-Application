@@ -3,10 +3,10 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-import dj_database_url
 import mimetypes
 from django.apps import apps
 
+load_dotenv()  # Загружаем переменные из .env
 mimetypes.add_type("application/json", ".json", True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -138,7 +138,7 @@ TEST_RUNNER = "django.test.runner.DiscoverRunner"
 MEDIA_URL = '/media/'  # URL для доступа к медиа-файлам
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Директория для сохранения медиа
 
-load_dotenv()  # Загружаем переменные из .env
+
 
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
@@ -146,7 +146,7 @@ STRAVA_API_KEY = os.getenv("STRAVA_API_KEY")
 YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 
 # Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+# Для PostgreSQL
 #
 # DATABASES = {
 #     'default': {
@@ -159,21 +159,7 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 #     }
 # }
 
-#  Для MySQL
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'rostislav62$default',  # Имя твоей базы
-        'USER': 'rostislav62',  # Имя твоего PythonAnywhere пользователя
-        'PASSWORD': '9KnetinHpa63hE5',  # MySQL пароль
-        'HOST': 'rostislav62.mysql.pythonanywhere-services.com',  # Хост базы
-        'PORT': '3306',
-    }
-}
-
-
-
-#
+# Для Railway
 # DATABASES = {
 #     'default': dj_database_url.config(
 #         default=os.getenv("DATABASE_URL"),
@@ -181,6 +167,18 @@ DATABASES = {
 #         ssl_require=True  # Обязательно для Railway
 #     )
 # }
+
+#  Для MySQL
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('FSTR_DB_NAME', 'rostislav62$default'),
+        'USER': os.getenv('FSTR_DB_LOGIN', 'rostislav62'),
+        'PASSWORD': os.getenv('FSTR_DB_PASS', ''),
+        'HOST': os.getenv('FSTR_DB_HOST', 'rostislav62.mysql.pythonanywhere-services.com'),
+        'PORT': os.getenv('FSTR_DB_PORT', '3306'),
+    }
+}
 
 
 def get_api_permissions():
@@ -212,7 +210,7 @@ REST_FRAMEWORK = {
 }
 
 LOGIN_URL = "/admin/login/"
-# LOGIN_URL = None
+
 SWAGGER_SETTINGS = {
     'DEFAULT_INFO': 'config.urls.schema_view',
     'USE_SESSION_AUTH': False,  # Отключаем стандартную авторизацию Django
