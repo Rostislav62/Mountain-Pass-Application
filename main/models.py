@@ -54,7 +54,9 @@ class PerevalStatus(models.Model):
 class PerevalUser(models.Model):
     """Модель для хранения информации о пользователях, вносящих данные о перевалах"""
 
-    full_name = models.CharField(max_length=255)  # ФИО
+    name = models.CharField(max_length=255)  # ФИО
+    family_name = models.CharField(max_length=255)  # ФИО
+    father_name = models.CharField(max_length=255)  # ФИО
     phone = models.CharField(max_length=20, unique=True)  # Телефон (уникальный)
     email = models.EmailField(unique=True)  # Email (уникальный)
     created_at = models.DateTimeField(auto_now_add=True)  # Дата создания (автоматическая)
