@@ -264,7 +264,7 @@ class RegisterView(APIView):
 
     @swagger_auto_schema(
         request_body=PerevalUserSerializer,  # Указываем, что в тело запроса вводятся данные пользователя
-        responses={201: openapi.Response("Успешная регистрация", UserSerializer)},
+        # responses={201: openapi.Response("Успешная регистрация", PerevalUserSerializer)},
     )
     def post(self, request):
         """POST-запрос на создание нового пользователя"""
