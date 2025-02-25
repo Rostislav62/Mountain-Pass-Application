@@ -41,27 +41,72 @@ class Coords(models.Model):
         return f"({self.latitude}, {self.longitude}, {self.height})"
 
 
-class PerevalAdded(models.Model):
+class PerevalStatus(models.Model):
+    """Таблица статусов перевалов"""
+
     STATUS_CHOICES = [
-        ('new', 'New'),
-        ('pending', 'Pending'),
-        ('accepted', 'Accepted'),
-        ('rejected', 'Rejected'),
+        (0, 'New'),
+        (1, 'Pending'),
+        (2, 'Accepted'),
+        (3, 'Rejected'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    id = models.IntegerField(choices=STATUS_CHOICES, primary_key=True)
+    name = models.CharField(max_length=20, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class PerevalUser(models.Model):
+    """Модель для хранения информации о пользователях, вносящих данные о перевалах"""
+
+    full_name = models.CharField(max_length=255)  # ФИО
+    phone = models.CharField(max_length=20, unique=True)  # Телефон (уникальный)
+    email = models.EmailField(unique=True)  # Email (уникальный)
+    created_at = models.DateTimeField(auto_now_add=True)  # Дата создания (автоматическая)
+
+    def __str__(self):
+        return f"{self.full_name} ({self.email})"
+
+    class Meta:
+        verbose_name = "Пользователь перевалов"
+        verbose_name_plural = "Пользователи перевалов"
+
+
+class PerevalAdded(models.Model):
+    """Модель для хранения перевалов"""
+
+    user = models.ForeignKey(
+        PerevalUser,
+        on_delete=models.SET_DEFAULT,
+        default=1  # Фиксированный admin_user (ID=1)
+    )
     coord = models.ForeignKey(Coords, on_delete=models.CASCADE)
     beautyTitle = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
     other_titles = models.CharField(max_length=255, blank=True, null=True)
     connect = models.CharField(max_length=20, blank=True, null=True)
     add_time = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='new')
+    status = models.ForeignKey(PerevalStatus, on_delete=models.CASCADE, default=0)  # Привязываем к PerevalStatus
     route_description = models.CharField(max_length=255, blank=True, null=True)
-    hazards = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.title
+
+class PerevalDifficulty(models.Model):
+    """Связь перевалов с уровнем сложности и сезоном"""
+
+    pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE, related_name="difficulties")
+    season = models.ForeignKey(Season, on_delete=models.CASCADE)
+    difficulty = models.ForeignKey(DifficultyLevel, on_delete=models.CASCADE, null=True, default=None)
+
+    class Meta:
+        unique_together = ('pereval', 'season')  # Запрещаем дублирование данных для одного сезона
+
+    def __str__(self):
+        return f"{self.pereval.title} - {self.season.name}: {self.difficulty or 'No difficulty'}"
+
 
 
 class PerevalImages(models.Model):
@@ -88,7 +133,8 @@ class PerevalDifficulty(models.Model):
     """Связь перевалов с уровнем сложности и сезоном"""
     pereval = models.ForeignKey(PerevalAdded, on_delete=models.CASCADE, related_name="difficulties")
     season = models.ForeignKey(Season, on_delete=models.CASCADE)  # 🔥 Теперь сезон — внешний ключ
-    difficulty = models.ForeignKey(DifficultyLevel, on_delete=models.CASCADE, null=True, default=None)  # 🔥 Теперь сложность — внешний ключ
+    difficulty = models.ForeignKey(DifficultyLevel, on_delete=models.CASCADE, null=True,
+                                   default=None)  # 🔥 Теперь сложность — внешний ключ
 
     class Meta:
         unique_together = ('pereval', 'season')  # Запрещаем дублирование данных для одного сезона
@@ -108,19 +154,3 @@ class ApiSettings(models.Model):
 
     def __str__(self):
         return f"API Auth Required: {self.require_authentication}"
-
-
-class PerevalUser(models.Model):
-    """Модель для хранения информации о пользователях, вносящих данные о перевалах"""
-
-    full_name = models.CharField(max_length=255)  # ФИО
-    phone = models.CharField(max_length=20, unique=True)  # Телефон (уникальный)
-    email = models.EmailField(unique=True)  # Email (уникальный)
-    created_at = models.DateTimeField(auto_now_add=True)  # Дата создания (автоматическая)
-
-    def __str__(self):
-        return f"{self.full_name} ({self.email})"
-
-    class Meta:
-        verbose_name = "Пользователь перевалов"
-        verbose_name_plural = "Пользователи перевалов"
