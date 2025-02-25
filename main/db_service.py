@@ -1,6 +1,6 @@
 #  /Mountain Pass Application/main/db_service.py
 
-from main.models import User, PerevalAdded, PerevalImages, Coords, WeatherInfo, PerevalUser
+from main.models import User, PerevalAdded, PerevalImages, Coords, WeatherInfo, PerevalUser, PerevalStatus
 # from main.models import PerevalGpsTracks, PerevalHistory, RelatedObjects
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist  # Для обработки ошибок, если перевала нет
@@ -168,7 +168,13 @@ class DatabaseService:
         coord_data = data.get('coord', {})
         coord = Coords.objects.create(**coord_data)
 
-        # Создаём запись перевала
+        # Получаем ID статуса из данных запроса (по умолчанию "New" = id 1)
+        status_id = data.get('status', 1)
+
+        # Ищем объект PerevalStatus по ID (если не найден, берём статус "New")
+        status_obj = PerevalStatus.objects.get(id=status_id)
+
+        # Создаём перевал с объектом `PerevalStatus`
         pereval = PerevalAdded.objects.create(
             user=user,
             coord=coord,
@@ -176,7 +182,7 @@ class DatabaseService:
             title=data.get('title', ''),
             other_titles=data.get('other_titles', ''),
             connect=data.get('connect', ''),
-            status='new',
+            status=status_obj,  # ✅ Теперь передаётся объект `PerevalStatus`
         )
 
         images_data = data.get('images', [])
