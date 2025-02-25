@@ -156,7 +156,13 @@ class DatabaseService:
 
         # Получаем данные пользователя
         user_data = data.get('user', {})
-        user, _ = PerevalUser.objects.get_or_create(email=user_email, defaults=user_data)
+        user, created = PerevalUser.objects.get_or_create(email=user_email)
+
+        # Если пользователь уже существовал – обновляем его данные
+        if not created:
+            for attr, value in user_data.items():
+                setattr(user, attr, value)
+            user.save()
 
         # Создаём координаты перевала
         coord_data = data.get('coord', {})
