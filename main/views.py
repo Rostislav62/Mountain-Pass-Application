@@ -3,6 +3,8 @@
 # from main.models import PerevalGpsTracks, PerevalAdded
 # from main.services.google_maps import get_google_map_link
 # from django.shortcuts import get_object_or_404  # Удобный метод для получения объекта или 404
+# from rest_framework.response import Response  # Импортируем объект Response
+# from django.contrib.auth.decorators import login_required  # Проверяем администратора
 import traceback
 import os
 from main.db_service import DatabaseService
@@ -12,7 +14,6 @@ from rest_framework.views import APIView
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from rest_framework.generics import ListAPIView  # Импортируем базовый класс для списков
-from rest_framework.response import Response  # Импортируем объект Response
 from rest_framework import status  # Для указания HTTP-статусов
 from main.models import PerevalAdded  # Импортируем модель Перевала
 from main.serializers import SubmitDataSerializer  # Подключаем сериализатор
@@ -20,12 +21,10 @@ from rest_framework.generics import RetrieveAPIView
 from drf_yasg.utils import swagger_auto_schema  # 📌 Импортируем Swagger-декоратор Swagger-документация
 from drf_yasg import openapi  # 📌 Импортируем для описания параметров
 from rest_framework.parsers import MultiPartParser, FormParser  # 📌 Добавляем поддержку загрузки файлов
-from main.serializers import UserSerializer
 from rest_framework.generics import UpdateAPIView
 from rest_framework.permissions import AllowAny
 from main.serializers import PerevalImagesSerializer  # Подключаем сериализатор
 from main.models import ApiSettings  # Импортируем модель
-from django.contrib.auth.decorators import login_required  # Проверяем администратора
 from rest_framework.permissions import IsAdminUser  # Только админы могут изменять настройку
 from rest_framework.generics import RetrieveUpdateAPIView  # Используем API для получения/изменения
 from main.serializers import ApiSettingsSerializer
