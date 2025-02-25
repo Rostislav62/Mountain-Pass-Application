@@ -4,7 +4,7 @@
 import logging
 from rest_framework import serializers
 from main.models import PerevalAdded, Coords, User, PerevalImages, PerevalDifficulty, Season, DifficultyLevel, \
-    ApiSettings, PerevalUser
+    ApiSettings, PerevalUser, PerevalStatus
 from django.contrib.auth.models import User
 
 
@@ -72,27 +72,23 @@ class PerevalDifficultySerializer(serializers.ModelSerializer):
 
 
 class PerevalUserSerializer(serializers.ModelSerializer):
-    """Сериализатор для PerevalUser"""
-
     class Meta:
         model = PerevalUser
-        fields = ['id', 'full_name', 'phone', 'email']
-
+        fields = ['id', 'family_name', 'first_name', 'father_name', 'phone', 'email']
 
 
 class SubmitDataSerializer(serializers.ModelSerializer):
-    """Сериализатор для входных данных API"""
-
-    user = PerevalUserSerializer()  # Декодируем объект пользователя
-    coord = CoordsSerializer()  # Декодируем объект координат
-    difficulties = PerevalDifficultySerializer(many=True)  # Теперь список сложностей
-
+    user = PerevalUserSerializer()
+    coord = CoordsSerializer()
+    status = serializers.PrimaryKeyRelatedField(queryset=PerevalStatus.objects.all())  # 🔥 Связываем с PerevalStatus
+    difficulties = PerevalDifficultySerializer(many=True)
     images = PerevalImagesSerializer(many=True, required=True)
 
     class Meta:
         model = PerevalAdded
         fields = ['beautyTitle', 'title', 'other_titles', 'connect', 'add_time', 'user', 'coord', 'status',
                   'difficulties', 'images']
+
 
     def create(self, validated_data):
         difficulties_data = validated_data.pop('difficulties', [])

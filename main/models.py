@@ -50,19 +50,19 @@ class PerevalStatus(models.Model):
         return self.name
 
 
-
 class PerevalUser(models.Model):
     """Модель для хранения информации о пользователях, вносящих данные о перевалах"""
 
-    name = models.CharField(max_length=255)  # ФИО
-    family_name = models.CharField(max_length=255)  # ФИО
-    father_name = models.CharField(max_length=255)  # ФИО
+    family_name = models.CharField(max_length=255)  # Фамилия
+    first_name = models.CharField(max_length=255)  # Имя
+    father_name = models.CharField(max_length=255, blank=True, null=True, default="")  # Отчество (может быть пустым)
     phone = models.CharField(max_length=20, unique=True)  # Телефон (уникальный)
     email = models.EmailField(unique=True)  # Email (уникальный)
     created_at = models.DateTimeField(auto_now_add=True)  # Дата создания (автоматическая)
 
     def __str__(self):
-        return f"{self.full_name} ({self.email})"
+        return f"{self.family_name} {self.first_name} ({self.email})"
+
 
     class Meta:
         verbose_name = "Пользователь перевалов"

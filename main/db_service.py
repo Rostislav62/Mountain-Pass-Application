@@ -1,6 +1,6 @@
 #  /Mountain Pass Application/main/db_service.py
 
-from main.models import User, PerevalAdded, PerevalImages, Coords, WeatherInfo
+from main.models import User, PerevalAdded, PerevalImages, Coords, WeatherInfo, PerevalUser
 # from main.models import PerevalGpsTracks, PerevalHistory, RelatedObjects
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist  # Для обработки ошибок, если перевала нет
@@ -156,7 +156,7 @@ class DatabaseService:
 
         # Получаем данные пользователя
         user_data = data.get('user', {})
-        user, _ = User.objects.get_or_create(email=user_email, defaults=user_data)
+        user, _ = PerevalUser.objects.get_or_create(email=user_email, defaults=user_data)
 
         # Создаём координаты перевала
         coord_data = data.get('coord', {})
