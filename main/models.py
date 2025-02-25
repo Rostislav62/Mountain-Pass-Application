@@ -44,18 +44,11 @@ class Coords(models.Model):
 class PerevalStatus(models.Model):
     """Таблица статусов перевалов"""
 
-    STATUS_CHOICES = [
-        (0, 'New'),
-        (1, 'Pending'),
-        (2, 'Accepted'),
-        (3, 'Rejected'),
-    ]
-
-    id = models.IntegerField(choices=STATUS_CHOICES, primary_key=True)
     name = models.CharField(max_length=20, unique=True)
 
     def __str__(self):
         return self.name
+
 
 
 class PerevalUser(models.Model):
