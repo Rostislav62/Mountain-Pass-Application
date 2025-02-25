@@ -56,10 +56,13 @@ class SubmitDataView(APIView):
                 print("✅ Валидированные данные:", data)  # ✅ Логируем после валидации
 
                 # Сохраняем данные в БД
-                pereval = DatabaseService.add_pereval(
-                    user_email=data['user']['email'],
-                    data=data
-                )
+                if not data.get("connect", False):
+                    return Response(
+                        {"status": 400, "message": "Нет связи. Перевал нельзя отправить."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                pereval = DatabaseService.add_pereval(user_email=data['user']['email'], data=data)
 
                 # Возвращаем ID созданного объекта
                 return Response({"status": 200, "message": None, "id": pereval.id}, status=status.HTTP_201_CREATED)

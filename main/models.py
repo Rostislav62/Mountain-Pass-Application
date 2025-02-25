@@ -81,7 +81,7 @@ class PerevalAdded(models.Model):
     beautyTitle = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
     other_titles = models.CharField(max_length=255, blank=True, null=True)
-    connect = models.CharField(max_length=20, blank=True, null=True)
+    connect = models.BooleanField(default=False)  # Перевал отправлен на сервер (True) или нет (False)
     add_time = models.DateTimeField(auto_now_add=True)
     status = models.ForeignKey(PerevalStatus, on_delete=models.CASCADE, default=1)  # Привязываем к PerevalStatus
     route_description = models.CharField(max_length=255, blank=True, null=True)
