@@ -10,6 +10,8 @@ from main.models import PerevalAdded, Coords, User, PerevalImages, PerevalDiffic
 logger = logging.getLogger(__name__)  # Логируем данные для отладки
 
 
+
+
 class CoordsSerializer(serializers.ModelSerializer):
     """Сериализатор для координат перевала"""
 
@@ -78,6 +80,14 @@ class PerevalDifficultySerializer(serializers.ModelSerializer):
     class Meta:
         model = PerevalDifficulty
         fields = ['season', 'difficulty']
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор стандартного пользователя Django"""
+
+    class Meta:
+        model = User  # Используем `auth.User`
+        fields = ['id', 'username', 'email']
 
 
 class SubmitDataSerializer(serializers.ModelSerializer):
