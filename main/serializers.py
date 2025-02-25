@@ -5,11 +5,10 @@ import logging
 from rest_framework import serializers
 from main.models import PerevalAdded, Coords, User, PerevalImages, PerevalDifficulty, Season, DifficultyLevel, \
     ApiSettings
+from django.contrib.auth.models import User
 
 
 logger = logging.getLogger(__name__)  # Логируем данные для отладки
-
-
 
 
 class CoordsSerializer(serializers.ModelSerializer):
@@ -50,18 +49,8 @@ class CoordsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def update(self, instance, validated_data):
-        """Обновляем данные пользователя и профиля"""
-        profile_data = validated_data.pop('profile', {})
-        instance = super().update(instance, validated_data)
-
-        profile, created = UserProfile.objects.get_or_create(user=instance)
-        for attr, value in profile_data.items():
-            setattr(profile, attr, value)
-        profile.save()
-
-        return instance
-
-
+        """Обновляем данные пользователя"""
+        return super().update(instance, validated_data)
 
 class PerevalImagesSerializer(serializers.ModelSerializer):
     """Сериализатор для изображений перевала"""
@@ -86,8 +75,8 @@ class UserSerializer(serializers.ModelSerializer):
     """Сериализатор стандартного пользователя Django"""
 
     class Meta:
-        model = User  # Используем `auth.User`
-        fields = ['id', 'username', 'email']
+        model = User
+        fields = ['id', 'username', 'email', 'password']
 
 
 class SubmitDataSerializer(serializers.ModelSerializer):

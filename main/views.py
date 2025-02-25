@@ -32,6 +32,7 @@ from rest_framework.generics import ListCreateAPIView, DestroyAPIView
 from rest_framework.response import Response
 from main.models import ModeratorGroup, User
 from main.permissions import IsSuperAdmin
+from main.serializers import UserSerializer
 
 
 class SubmitDataView(APIView):
