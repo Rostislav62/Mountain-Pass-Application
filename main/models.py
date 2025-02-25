@@ -108,3 +108,19 @@ class ApiSettings(models.Model):
 
     def __str__(self):
         return f"API Auth Required: {self.require_authentication}"
+
+
+class PerevalUser(models.Model):
+    """Модель для хранения информации о пользователях, вносящих данные о перевалах"""
+
+    full_name = models.CharField(max_length=255)  # ФИО
+    phone = models.CharField(max_length=20, unique=True)  # Телефон (уникальный)
+    email = models.EmailField(unique=True)  # Email (уникальный)
+    created_at = models.DateTimeField(auto_now_add=True)  # Дата создания (автоматическая)
+
+    def __str__(self):
+        return f"{self.full_name} ({self.email})"
+
+    class Meta:
+        verbose_name = "Пользователь перевалов"
+        verbose_name_plural = "Пользователи перевалов"
