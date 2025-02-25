@@ -83,7 +83,7 @@ class PerevalAdded(models.Model):
     other_titles = models.CharField(max_length=255, blank=True, null=True)
     connect = models.CharField(max_length=20, blank=True, null=True)
     add_time = models.DateTimeField(auto_now_add=True)
-    status = models.ForeignKey(PerevalStatus, on_delete=models.CASCADE, default=0)  # Привязываем к PerevalStatus
+    status = models.ForeignKey(PerevalStatus, on_delete=models.CASCADE, default=1)  # Привязываем к PerevalStatus
     route_description = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
