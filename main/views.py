@@ -32,7 +32,7 @@ from rest_framework.generics import ListCreateAPIView, DestroyAPIView
 from rest_framework.response import Response
 from main.models import ModeratorGroup, User
 from main.permissions import IsSuperAdmin
-from main.serializers import UserSerializer
+from main.serializers import PerevalUserSerializer
 
 
 class SubmitDataView(APIView):
@@ -263,12 +263,12 @@ class RegisterView(APIView):
     """Регистрация нового пользователя"""
 
     @swagger_auto_schema(
-        request_body=UserSerializer,  # Указываем, что в тело запроса вводятся данные пользователя
+        request_body=PerevalUserSerializer,  # Указываем, что в тело запроса вводятся данные пользователя
         responses={201: openapi.Response("Успешная регистрация", UserSerializer)},
     )
     def post(self, request):
         """POST-запрос на создание нового пользователя"""
-        serializer = UserSerializer(data=request.data)
+        serializer = PerevalUserSerializer(data=request.data)
         if serializer.is_valid():
             user = DatabaseService.add_user(
                 email=serializer.validated_data['email'],

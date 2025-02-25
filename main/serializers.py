@@ -4,7 +4,7 @@
 import logging
 from rest_framework import serializers
 from main.models import PerevalAdded, Coords, User, PerevalImages, PerevalDifficulty, Season, DifficultyLevel, \
-    ApiSettings
+    ApiSettings, PerevalUser
 from django.contrib.auth.models import User
 
 
@@ -71,18 +71,19 @@ class PerevalDifficultySerializer(serializers.ModelSerializer):
         fields = ['season', 'difficulty']
 
 
-class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор стандартного пользователя Django"""
+class PerevalUserSerializer(serializers.ModelSerializer):
+    """Сериализатор для PerevalUser"""
 
     class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'password']
+        model = PerevalUser
+        fields = ['id', 'full_name', 'phone', 'email']
+
 
 
 class SubmitDataSerializer(serializers.ModelSerializer):
     """Сериализатор для входных данных API"""
 
-    user = UserSerializer()  # Декодируем объект пользователя
+    user = PerevalUserSerializer()  # Декодируем объект пользователя
     coord = CoordsSerializer()  # Декодируем объект координат
     difficulties = PerevalDifficultySerializer(many=True)  # Теперь список сложностей
 
