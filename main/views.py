@@ -100,6 +100,10 @@ class SubmitDataView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class UploadImageView(APIView):
     """📌 API для загрузки изображений перевалов"""
 
@@ -135,8 +139,12 @@ class UploadImageView(APIView):
     def post(self, request):
         """📌 Принимает изображение, сохраняет его и записывает в БД"""
 
+        logger.info("📥 Получен запрос на загрузку изображения.")
+        logger.info(f"🔹 Данные запроса: {request.data}")
+
         # Проверяем, переданы ли все нужные данные
         if 'image' not in request.FILES:
+            logger.error("❌ Ошибка: Файл изображения не передан.")
             return Response(
                 {"status": 400, "message": "Файл изображения обязателен"},
                 status=status.HTTP_400_BAD_REQUEST
@@ -149,7 +157,9 @@ class UploadImageView(APIView):
         # Проверяем, существует ли перевал
         try:
             pereval = PerevalAdded.objects.get(id=pereval_id)
+            logger.info(f"✅ Найден перевал ID: {pereval_id}")
         except PerevalAdded.DoesNotExist:
+            logger.error(f"❌ Ошибка: Перевал ID {pereval_id} не найден.")
             return Response(
                 {"status": 400, "message": "Перевал не найден"},
                 status=status.HTTP_400_BAD_REQUEST
@@ -159,6 +169,7 @@ class UploadImageView(APIView):
         upload_dir = os.path.join(settings.MEDIA_ROOT, "pereval_images")
         if not os.path.exists(upload_dir):
             os.makedirs(upload_dir)
+            logger.info(f"📂 Создана папка для изображений: {upload_dir}")
 
         # Проверяем, нет ли уже файла с таким же именем и генерируем уникальное имя
         base_name, ext = os.path.splitext(image.name)
@@ -172,14 +183,30 @@ class UploadImageView(APIView):
             counter += 1
 
         # Сохраняем файл
-        default_storage.save(file_path, ContentFile(image.read()))
+        try:
+            default_storage.save(file_path, ContentFile(image.read()))
+            logger.info(f"✅ Файл сохранён: {file_path}")
+        except Exception as e:
+            logger.error(f"❌ Ошибка при сохранении файла: {str(e)}")
+            return Response(
+                {"status": 500, "message": f"Ошибка при сохранении файла: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         # Записываем в БД
-        image_record = PerevalImages.objects.create(
-            pereval=pereval,
-            data=os.path.join("pereval_images", file_name),  # Относительный путь
-            title=title
-        )
+        try:
+            image_record = PerevalImages.objects.create(
+                pereval=pereval,
+                data=os.path.join("pereval_images", file_name),  # Относительный путь
+                title=title
+            )
+            logger.info(f"✅ Изображение записано в БД с ID: {image_record.id}")
+        except Exception as e:
+            logger.error(f"❌ Ошибка при записи в БД: {str(e)}")
+            return Response(
+                {"status": 500, "message": f"Ошибка при записи в БД: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         return Response(
             {"status": 201, "message": "Файл загружен", "image_id": image_record.id},
