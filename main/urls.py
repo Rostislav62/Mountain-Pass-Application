@@ -13,10 +13,10 @@ urlpatterns = [
     path('uploadImage/', UploadImageView.as_view(), name='upload-image'),
 
     # Получение списка изображений перевала
-    path('uploadImage/<int:pk>/', PerevalPhotosListView.as_view(), name='upload-image-list'),
+    path('uploadImage/photos/<int:pk>/', PerevalPhotosListView.as_view(), name='upload-image-list'),
 
     # Удаление фотографии
-    path('uploadImage/<int:photo_id>/', DeletePerevalPhotoView.as_view(), name='delete-upload-image'),
+    path('uploadImage/delete/<int:photo_id>/', DeletePerevalPhotoView.as_view(), name='delete-upload-image'),
 
     path('submitData/', SubmitDataView.as_view(), name='submit-data'),  # POST-запросы
 
