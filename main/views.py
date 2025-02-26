@@ -238,22 +238,13 @@ class SubmitDataUpdateView(APIView):
 
 
 class SubmitDataListView(ListAPIView):
-    """Получение списка всех перевалов, отправленных пользователем по email."""
+    """Получение списка всех перевалов."""
 
-    serializer_class = SubmitDataSerializer  # Используем уже существующий сериализатор
-    queryset = PerevalAdded.objects.all()  # Базовый QuerySet (отфильтруем позже)
+    serializer_class = SubmitDataSerializer
 
     def get_queryset(self):
-        """
-        Получаем `email` из параметров запроса и фильтруем перевалы.
-        Если email не передан — возвращаем пустой список.
-        """
-        email = self.request.query_params.get('user__email')  # Получаем email из URL-параметров
-
-        if not email:  # Если email не передан — возвращаем пустой список
-            return PerevalAdded.objects.none()
-
-        return PerevalAdded.objects.filter(user__email=email)  # Фильтруем по email
+        """Возвращает все перевалы без фильтрации."""
+        return PerevalAdded.objects.all()  # 🔥 Теперь без фильтрации по email
 
 
 class SubmitDataDetailView(RetrieveAPIView):
