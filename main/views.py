@@ -497,9 +497,9 @@ class DecisionPerevalView(APIView):
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['status'],
+            required=['status_id'],
             properties={
-                'status': openapi.Schema(type=openapi.TYPE_STRING, enum=['accepted', 'rejected'])
+                'status_id': openapi.Schema(type=openapi.TYPE_INTEGER, enum=[3, 4])
             },
         ),
         responses={
@@ -514,16 +514,16 @@ class DecisionPerevalView(APIView):
         except PerevalAdded.DoesNotExist:
             return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
 
-        new_status = request.data.get("status")
-        if new_status not in ["accepted", "rejected"]:
-            return Response({"state": 0, "message": "Некорректный статус"}, status=status.HTTP_400_BAD_REQUEST)
+        status_id = request.data.get("status_id")
+        if status_id not in [3, 4]:
+            return Response({"state": 0, "message": "Некорректный ID статуса"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if pereval.status in ["accepted", "rejected"]:
+        if pereval.status.id in [3, 4]:
             return Response({"state": 0, "message": "Перевал уже обработан"}, status=status.HTTP_400_BAD_REQUEST)
 
-        pereval.status = new_status
+        pereval.status = PerevalStatus.objects.get(id=status_id)
         pereval.save()
-        return Response({"state": 1, "message": f"Перевал {new_status}"}, status=status.HTTP_200_OK)
+        return Response({"state": 1, "message": f"Перевал обновлён до статуса ID {status_id}"}, status=status.HTTP_200_OK)
 
 
 
