@@ -297,7 +297,7 @@ class SubmitDataDetailView(APIView):
 
     def get(self, request, pk, *args, **kwargs):
         """
-        ✅ Теперь, если перевал с таким `id` не найден, возвращаем кастомное сообщение.
+        ✅ Если перевал не найден, возвращаем кастомное сообщение.
         """
         try:
             pereval = PerevalAdded.objects.get(pk=pk)
