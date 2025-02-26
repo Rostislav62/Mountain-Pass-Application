@@ -18,7 +18,6 @@ from rest_framework.generics import ListAPIView  # Импортируем баз
 from rest_framework import status  # Для указания HTTP-статусов
 from main.models import PerevalAdded  # Импортируем модель Перевала
 from main.serializers import SubmitDataSerializer  # Подключаем сериализатор
-from rest_framework.generics import RetrieveAPIView
 from drf_yasg.utils import swagger_auto_schema  # 📌 Импортируем Swagger-декоратор Swagger-документация
 from drf_yasg import openapi  # 📌 Импортируем для описания параметров
 from rest_framework.parsers import MultiPartParser, FormParser  # 📌 Добавляем поддержку загрузки файлов
@@ -35,8 +34,8 @@ from main.models import ModeratorGroup, User
 from main.permissions import IsSuperAdmin
 from main.serializers import PerevalUserSerializer
 from main.permissions import IsModerator
-
 from rest_framework.permissions import IsAuthenticated
+
 
 class SubmitDataView(APIView):
     """API для приёма и получения данных о перевале"""
@@ -219,40 +218,40 @@ class UploadImageView(APIView):
         )
 
 
-class UploadTrackView(APIView):
-    """API для загрузки GPS-треков"""
-
-    def post(self, request):
-        """Принимает GPS-трек (GPX/KML), сохраняет его и записывает в БД"""
-
-        # Проверяем, есть ли файл в запросе
-        if 'track' not in request.FILES:
-            return Response({"status": 400, "message": "Файл трека обязателен"}, status=status.HTTP_400_BAD_REQUEST)
-
-        track = request.FILES['track']
-        pereval_id = request.data.get('pereval_id')
-
-        # Проверяем, существует ли перевал
-        try:
-            pereval = PerevalAdded.objects.get(id=pereval_id)
-        except PerevalAdded.DoesNotExist:
-            return Response({"status": 400, "message": "Перевал не найден"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Определяем путь для сохранения файла
-        upload_dir = os.path.join(settings.MEDIA_ROOT, "pereval_tracks")
-        if not os.path.exists(upload_dir):
-            os.makedirs(upload_dir)
-
-        # Сохраняем файл в `MEDIA_ROOT/pereval_tracks/`
-        file_path = os.path.join("pereval_tracks", track.name)
-        full_path = os.path.join(settings.MEDIA_ROOT, file_path)
-        default_storage.save(full_path, ContentFile(track.read()))
-
-        # Сохраняем путь в БД
-        # track_record = PerevalGpsTracks.objects.create(pereval=pereval, track_path=file_path)
-        # return Response({"status": 200, "message": "Файл трека загружен", "track_id": track_record.id}, status=status.HTTP_201_CREATED)
-
-        return Response({"status": 200, "message": "Файл трека загружен"}, status=status.HTTP_201_CREATED)
+# class UploadTrackView(APIView):
+#     """API для загрузки GPS-треков"""
+#
+#     def post(self, request):
+#         """Принимает GPS-трек (GPX/KML), сохраняет его и записывает в БД"""
+#
+#         # Проверяем, есть ли файл в запросе
+#         if 'track' not in request.FILES:
+#             return Response({"status": 400, "message": "Файл трека обязателен"}, status=status.HTTP_400_BAD_REQUEST)
+#
+#         track = request.FILES['track']
+#         pereval_id = request.data.get('pereval_id')
+#
+#         # Проверяем, существует ли перевал
+#         try:
+#             pereval = PerevalAdded.objects.get(id=pereval_id)
+#         except PerevalAdded.DoesNotExist:
+#             return Response({"status": 400, "message": "Перевал не найден"}, status=status.HTTP_400_BAD_REQUEST)
+#
+#         # Определяем путь для сохранения файла
+#         upload_dir = os.path.join(settings.MEDIA_ROOT, "pereval_tracks")
+#         if not os.path.exists(upload_dir):
+#             os.makedirs(upload_dir)
+#
+#         # Сохраняем файл в `MEDIA_ROOT/pereval_tracks/`
+#         file_path = os.path.join("pereval_tracks", track.name)
+#         full_path = os.path.join(settings.MEDIA_ROOT, file_path)
+#         default_storage.save(full_path, ContentFile(track.read()))
+#
+#         # Сохраняем путь в БД
+#         # track_record = PerevalGpsTracks.objects.create(pereval=pereval, track_path=file_path)
+#         # return Response({"status": 200, "message": "Файл трека загружен", "track_id": track_record.id}, status=status.HTTP_201_CREATED)
+#
+#         return Response({"status": 200, "message": "Файл трека загружен"}, status=status.HTTP_201_CREATED)
 
 
 class SubmitDataUpdateView(UpdateAPIView):
@@ -293,10 +292,23 @@ class SubmitDataListView(ListAPIView):
         return PerevalAdded.objects.all()  # 🔥 Теперь без фильтрации по email
 
 
-class SubmitDataDetailView(RetrieveAPIView):
+class SubmitDataDetailView(APIView):
     """Получение информации о конкретном перевале"""
-    queryset = PerevalAdded.objects.all()
-    serializer_class = SubmitDataSerializer
+
+    def get(self, request, pk, *args, **kwargs):
+        """
+        ✅ Теперь, если перевал с таким `id` не найден, возвращаем кастомное сообщение.
+        """
+        try:
+            pereval = PerevalAdded.objects.get(pk=pk)
+            serializer = SubmitDataSerializer(pereval)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except PerevalAdded.DoesNotExist:
+            return Response(
+                {"state": 0, "message": f"Перевал с ID {pk} не найден"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
 
 
 class RegisterView(APIView):
