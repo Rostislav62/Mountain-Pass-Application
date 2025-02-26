@@ -178,10 +178,10 @@ class UploadImageView(APIView):
             os.makedirs(upload_dir)
             logger.info(f"📂 Создана папка для изображений: {upload_dir}")
 
-        # Очищаем имя файла перед сохранением
-        sanitized_name = self.sanitize_filename(image.name)
-
         # Проверяем, нет ли уже файла с таким же именем и генерируем уникальное имя
+        # base_name, ext = os.path.splitext(image.name)
+        # 🔹 Очищаем имя файла от запрещённых символов
+        sanitized_name = 'Image'  # self.sanitize_filename(image.name)
         base_name, ext = os.path.splitext(sanitized_name)
         counter = 1
         file_name = f"{base_name}{ext}"
