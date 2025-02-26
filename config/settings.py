@@ -148,8 +148,6 @@ TEST_RUNNER = "django.test.runner.DiscoverRunner"
 MEDIA_URL = '/media/'  # URL для доступа к медиа-файлам
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Директория для сохранения медиа
 
-
-
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 STRAVA_API_KEY = os.getenv("STRAVA_API_KEY")
@@ -168,6 +166,7 @@ DATABASES = {
         'PORT': 5432,
     }
 }
+
 
 # Для Railway
 # DATABASES = {
@@ -189,10 +188,6 @@ DATABASES = {
 #         'PORT': os.getenv('FSTR_DB_PORT', '3306'),
 #     }
 # }
-
-
-
-
 def get_api_permissions():
     """Определяет, требует ли API авторизацию (запускается после загрузки моделей)"""
     try:
@@ -238,7 +233,6 @@ SWAGGER_SETTINGS = {
     'DOC_EXPANSION': 'list',  # Раскрывает список методов API
     'SUPPORTED_SUBMIT_METHODS': ["get", "post", "put", "patch", "delete"],
 }
-
 
 # Создаём папку для логов, если её нет
 # LOGS_DIR = os.path.join(BASE_DIR, 'logs')
