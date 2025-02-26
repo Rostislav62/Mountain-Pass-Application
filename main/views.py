@@ -100,12 +100,10 @@ class SubmitDataView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-import uuid  # Импортируем для генерации уникальных имен файлов
-
 class UploadImageView(APIView):
     """📌 API для загрузки изображений перевалов"""
 
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = (MultiPartParser, FormParser)  # 📌 Поддержка multipart/form-data
 
     @swagger_auto_schema(
         operation_description="📌 Загрузка изображения для перевала",
@@ -123,6 +121,13 @@ class UploadImageView(APIView):
                 description="📌 Файл изображения",
                 type=openapi.TYPE_FILE,
                 required=True
+            ),
+            openapi.Parameter(
+                'title',
+                openapi.IN_FORM,
+                description="📌 Название изображения (опционально)",
+                type=openapi.TYPE_STRING,
+                required=False
             )
         ],
         responses={201: openapi.Response("Файл загружен")}
@@ -130,43 +135,56 @@ class UploadImageView(APIView):
     def post(self, request):
         """📌 Принимает изображение, сохраняет его и записывает в БД"""
 
-        # Проверяем наличие `pereval_id` в запросе
-        pereval_id = request.data.get('pereval_id')
-        if not pereval_id:
-            return Response({"status": 400, "message": "Не указан ID перевала"},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        # Проверяем, есть ли файл в запросе
+        # Проверяем, переданы ли все нужные данные
         if 'image' not in request.FILES:
-            return Response({"status": 400, "message": "Файл изображения обязателен"},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"status": 400, "message": "Файл изображения обязателен"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         image = request.FILES['image']
+        pereval_id = request.data.get('pereval_id')
+        title = request.data.get('title', image.name)  # Используем имя файла, если `title` не передан
 
         # Проверяем, существует ли перевал
         try:
             pereval = PerevalAdded.objects.get(id=pereval_id)
         except PerevalAdded.DoesNotExist:
-            return Response({"status": 400, "message": "Перевал не найден"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"status": 400, "message": "Перевал не найден"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         # Определяем путь для сохранения файла
         upload_dir = os.path.join(settings.MEDIA_ROOT, "pereval_images")
-        os.makedirs(upload_dir, exist_ok=True)  # Создаём папку, если её нет
+        if not os.path.exists(upload_dir):
+            os.makedirs(upload_dir)
 
-        # Генерируем уникальное имя файла
-        file_extension = image.name.split('.')[-1]  # Получаем расширение файла
-        unique_filename = f"{uuid.uuid4()}.{file_extension}"  # Генерируем уникальное имя
-        file_path = os.path.join("pereval_images", unique_filename)
-        full_path = os.path.join(settings.MEDIA_ROOT, file_path)
+        # Проверяем, нет ли уже файла с таким же именем и генерируем уникальное имя
+        base_name, ext = os.path.splitext(image.name)
+        counter = 1
+        file_name = f"{base_name}{ext}"
+        file_path = os.path.join(upload_dir, file_name)
+
+        while os.path.exists(file_path):
+            file_name = f"{base_name}_{counter}{ext}"
+            file_path = os.path.join(upload_dir, file_name)
+            counter += 1
 
         # Сохраняем файл
-        default_storage.save(full_path, ContentFile(image.read()))
+        default_storage.save(file_path, ContentFile(image.read()))
 
-        # Сохраняем путь в БД
-        image_record = PerevalImages.objects.create(pereval=pereval, data=file_path, title=image.name)
+        # Записываем в БД
+        image_record = PerevalImages.objects.create(
+            pereval=pereval,
+            data=os.path.join("pereval_images", file_name),  # Относительный путь
+            title=title
+        )
 
-        return Response({"status": 201, "message": "Файл загружен", "image_id": image_record.id},
-                        status=status.HTTP_201_CREATED)
+        return Response(
+            {"status": 201, "message": "Файл загружен", "image_id": image_record.id},
+            status=status.HTTP_201_CREATED
+        )
 
 
 class UploadTrackView(APIView):
