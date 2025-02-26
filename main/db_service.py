@@ -182,7 +182,7 @@ class DatabaseService:
             title=data.get('title', ''),
             other_titles=data.get('other_titles', ''),
             connect=data.get('connect', ''),
-            status=status_obj,  # ✅ Теперь передаётся объект `PerevalStatus`
+            status=status_id,
         )
 
         images_data = data.get('images', [])
