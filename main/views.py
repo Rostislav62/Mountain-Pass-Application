@@ -33,8 +33,6 @@ from rest_framework.response import Response
 from main.models import ModeratorGroup, User
 from main.permissions import IsSuperAdmin
 from main.serializers import PerevalUserSerializer
-import logging
-from django.utils.text import slugify
 
 
 class SubmitDataView(APIView):
@@ -102,15 +100,42 @@ class SubmitDataView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-logger = logging.getLogger(__name__)
 class UploadImageView(APIView):
     """📌 API для загрузки изображений перевалов"""
 
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = (MultiPartParser, FormParser)  # 📌 Поддержка multipart/form-data
 
+    @swagger_auto_schema(
+        operation_description="📌 Загрузка изображения для перевала",
+        manual_parameters=[
+            openapi.Parameter(
+                'pereval_id',
+                openapi.IN_FORM,
+                description="📌 ID перевала, к которому прикрепляется изображение",
+                type=openapi.TYPE_INTEGER,
+                required=True
+            ),
+            openapi.Parameter(
+                'image',
+                openapi.IN_FORM,
+                description="📌 Файл изображения",
+                type=openapi.TYPE_FILE,
+                required=True
+            ),
+            openapi.Parameter(
+                'title',
+                openapi.IN_FORM,
+                description="📌 Название изображения (опционально)",
+                type=openapi.TYPE_STRING,
+                required=False
+            )
+        ],
+        responses={201: openapi.Response("Файл загружен")}
+    )
     def post(self, request):
-        """📌 Принимает изображение, очищает имя и записывает в БД"""
+        """📌 Принимает изображение, сохраняет его и записывает в БД"""
 
+        # Проверяем, переданы ли все нужные данные
         if 'image' not in request.FILES:
             return Response(
                 {"status": 400, "message": "Файл изображения обязателен"},
@@ -119,8 +144,9 @@ class UploadImageView(APIView):
 
         image = request.FILES['image']
         pereval_id = request.data.get('pereval_id')
-        title = request.data.get('title', image.name)
+        title = request.data.get('title', image.name)  # Используем имя файла, если `title` не передан
 
+        # Проверяем, существует ли перевал
         try:
             pereval = PerevalAdded.objects.get(id=pereval_id)
         except PerevalAdded.DoesNotExist:
@@ -129,45 +155,29 @@ class UploadImageView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 📌 Очищаем имя файла от запрещённых символов
-        base_name, ext = os.path.splitext(image.name)
-        safe_name = slugify(base_name)  # Преобразуем в безопасное имя (латиница, без спецсимволов)
-        file_name = f"{safe_name}{ext.lower()}"  # Приводим расширение к нижнему регистру
-
-        # 📌 Проверяем разрешённые расширения
-        allowed_extensions = {".jpg", ".jpeg", ".png", ".gif"}
-        if ext.lower() not in allowed_extensions:
-            return Response(
-                {"status": 400, "message": "Недопустимый формат файла"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # 📌 Создаём уникальное имя файла (если уже существует)
+        # Определяем путь для сохранения файла
         upload_dir = os.path.join(settings.MEDIA_ROOT, "pereval_images")
         if not os.path.exists(upload_dir):
             os.makedirs(upload_dir)
 
-        file_path = os.path.join(upload_dir, file_name)
+        # Проверяем, нет ли уже файла с таким же именем и генерируем уникальное имя
+        base_name, ext = os.path.splitext(image.name)
         counter = 1
+        file_name = f"{base_name}{ext}"
+        file_path = os.path.join(upload_dir, file_name)
 
         while os.path.exists(file_path):
-            file_name = f"{safe_name}_{counter}{ext.lower()}"
+            file_name = f"{base_name}_{counter}{ext}"
             file_path = os.path.join(upload_dir, file_name)
             counter += 1
 
-        # 📌 Сохраняем файл безопасно
-        try:
-            default_storage.save(file_path, ContentFile(image.read()))
-        except Exception as e:
-            return Response(
-                {"status": 500, "message": f"Ошибка при сохранении файла: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        # Сохраняем файл
+        default_storage.save(file_path, ContentFile(image.read()))
 
-        # 📌 Записываем в БД
+        # Записываем в БД
         image_record = PerevalImages.objects.create(
             pereval=pereval,
-            data=os.path.join("pereval_images", file_name),
+            data=os.path.join("pereval_images", file_name),  # Относительный путь
             title=title
         )
 
