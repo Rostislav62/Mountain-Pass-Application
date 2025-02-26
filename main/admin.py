@@ -73,8 +73,17 @@ class WeatherInfoInline(admin.TabularInline):
     model = WeatherInfo
     extra = 0
 
+
 class PerevalAddedAdmin(admin.ModelAdmin):
-    list_display = ('title', 'user', 'status', 'add_time')
-    inlines = [PerevalImagesInline, PerevalDifficultyInline, WeatherInfoInline]
+    """Отображение всех полей модели PerevalAdded в админке"""
+
+    list_display = [field.name for field in PerevalAdded._meta.fields]  # ✅ Вывести ВСЕ поля
+
+    # Позволяет искать по title, id и email пользователя
+    search_fields = ('id', 'title', 'user__email')
+
+    # Фильтрация по статусу
+    list_filter = ('status', 'add_time')
+
 
 admin.site.register(PerevalAdded, PerevalAddedAdmin)
