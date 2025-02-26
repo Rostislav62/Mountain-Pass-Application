@@ -156,12 +156,13 @@ class DatabaseService:
 
         # Получаем данные пользователя
         user_data = data.get('user', {})
-        user, created = PerevalUser.objects.get_or_create(email=user_email)
+        user, created = PerevalUser.objects.get_or_create(email=user_email, defaults=user_data)
 
         # Если пользователь уже существовал – обновляем его данные
         if not created:
             for attr, value in user_data.items():
-                setattr(user, attr, value)
+                if value:  # Записываем только непустые значения
+                    setattr(user, attr, value)
             user.save()
 
         # Создаём координаты перевала
@@ -171,8 +172,6 @@ class DatabaseService:
         # Получаем ID статуса из данных запроса (по умолчанию "New" = id 1)
         status_id = data.get('status', 1)
 
-        # Ищем объект PerevalStatus по ID (если не найден, берём статус "New")
-        status_obj = PerevalStatus.objects.get(id=status_id)
 
         # Создаём перевал с объектом `PerevalStatus`
         pereval = PerevalAdded.objects.create(
