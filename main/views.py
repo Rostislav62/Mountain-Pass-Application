@@ -135,7 +135,7 @@ class UploadImageView(APIView):
         ],
         responses={201: openapi.Response("Файл загружен")}
     )
-    
+
     def post(self, request):
         """📌 Принимает изображение, сохраняет его и записывает в БД"""
 
@@ -173,6 +173,7 @@ class UploadImageView(APIView):
 
         # Проверяем, нет ли уже файла с таким же именем и генерируем уникальное имя
         base_name, ext = os.path.splitext(image.name)
+        base_name = 'Image'
         counter = 1
         file_name = f"{base_name}{ext}"
         file_path = os.path.join(upload_dir, file_name)
