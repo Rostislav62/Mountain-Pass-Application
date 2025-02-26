@@ -437,6 +437,7 @@ class PerevalPhotosListView(APIView):
     """Получение списка фотографий перевала"""
 
     @swagger_auto_schema(
+        operation_description="📌 Получение списка фотографий перевала",
         responses={200: PerevalImagesSerializer(many=True)}
     )
     def get(self, request, id, *args, **kwargs):
@@ -457,6 +458,7 @@ class DeletePerevalPhotoView(APIView):
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
+        operation_description="📌 Удаление фотографии перевала",
         responses={
             200: "Фотография удалена",
             403: "Нет прав на удаление",
@@ -477,6 +479,7 @@ class DeletePerevalPhotoView(APIView):
 
         return Response({"state": 0, "message": "У вас нет прав на удаление этой фотографии"},
                         status=status.HTTP_403_FORBIDDEN)
+
 
 
 class ModerationListView(APIView):
