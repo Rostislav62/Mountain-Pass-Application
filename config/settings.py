@@ -2,17 +2,25 @@
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv, find_dotenv
-
 import mimetypes
 from django.apps import apps
 
-load_dotenv(find_dotenv())  # Загружаем переменные из .env
+
+# from dotenv import load_dotenv, find_dotenv
+# load_dotenv(find_dotenv())  # Загружаем переменные из .env
+
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Определяем путь к .env вручную
+BASE_DIR = Path(__file__).resolve().parent.parent
+ENV_PATH = BASE_DIR / ".env"
+
+# Загружаем переменные окружения
+if ENV_PATH.exists():
+    load_dotenv(dotenv_path=ENV_PATH)
 
 mimetypes.add_type("application/json", ".json", True)
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -117,11 +125,6 @@ if os.path.exists(BASE_DIR / "static"):
     # BASE_DIR / "staticfiles/drf-yasg/swagger-ui-dist",  # Добавляем путь к Swagger UI
 else:
     STATICFILES_DIRS = []
-
-ENV_PATH = BASE_DIR / ".env"
-
-if ENV_PATH.exists():
-    load_dotenv(ENV_PATH)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
