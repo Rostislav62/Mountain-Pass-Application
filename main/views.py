@@ -195,46 +195,32 @@ class UploadTrackView(APIView):
         return Response({"status": 200, "message": "Файл трека загружен"}, status=status.HTTP_201_CREATED)
 
 
-class SubmitDataUpdateView(APIView):
-    """Редактирование данных о перевале, если статус `new`"""
+class SubmitDataUpdateView(UpdateAPIView):
+    """Редактирование данных о перевале, если статус new"""
 
-    def patch(self, request, pk, *args, **kwargs):
-        print("PATCH-запрос получен")  # Проверяем, вызывается ли метод
-        user_email = request.user.email  # Берём email из JWT-токена
+    queryset = PerevalAdded.objects.all()
+    serializer_class = SubmitDataSerializer
 
-        try:
-            pereval = PerevalAdded.objects.get(pk=pk)
-        except PerevalAdded.DoesNotExist:
-            return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+    def patch(self, request, *args, **kwargs):
+        pereval = self.get_object()
 
-        # 🔒 Проверяем, является ли пользователь автором перевала
-        if pereval.user.email != user_email:
-            return Response({"state": 0, "message": "Вы не являетесь владельцем этого перевала"},
-                            status=status.HTTP_403_FORBIDDEN)
+        # 🔹 Проверяем, можно ли редактировать (статус должен быть "New")
+        if pereval.status.id != 1:  # ✅ Сравниваем ID, а не строку
+            return Response({"status": 400, "message": "Обновление запрещено: статус не new"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
-        # Проверяем статус перевала
-        if pereval.status != "new":
-            return Response(
-                {"state": 0, "message": "Редактирование запрещено: статус перевала не `new`"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # 🔹 Удаляем `user` и `status` из обновляемых данных
+        mutable_data = request.data.copy()
+        mutable_data.pop("user", None)
+        mutable_data.pop("status", None)
 
-        # Запрещаем редактировать ФИО, email и телефон
-        data = request.data.copy()
-        if "user" in data:
-            for field in ["fam", "name", "otc", "email", "phone"]:
-                if field in data["user"]:
-                    del data["user"][field]  # Удаляем запрещённые поля
-
-        serializer = SubmitDataSerializer(pereval, data=data, partial=True)  # ВАЖНО: `partial=True`
+        serializer = self.get_serializer(pereval, data=mutable_data, partial=True)
 
         if serializer.is_valid():
-            print("🔍 Данные перед обновлением:", serializer.validated_data)  # Вывод в консоль для проверки
             serializer.save()
-            return Response({"state": 1, "message": "Данные успешно обновлены"}, status=status.HTTP_200_OK)
-        else:
-            print("❌ Ошибка валидации:", serializer.errors)  # Вывод ошибок в консоль
-            return Response({"state": 0, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"status": 200, "message": "Перевал успешно обновлён"}, status=status.HTTP_200_OK)
+
+        return Response({"status": 400, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SubmitDataListView(ListAPIView):
