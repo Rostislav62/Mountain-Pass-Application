@@ -34,6 +34,7 @@ from rest_framework.response import Response
 from main.models import ModeratorGroup, User
 from main.permissions import IsSuperAdmin
 from main.serializers import PerevalUserSerializer
+from main.permissions import IsModerator
 
 
 class SubmitDataView(APIView):
@@ -489,57 +490,94 @@ class ModerationListView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ApprovePerevalView(APIView):
-    """Подтверждение перевала (PUT /api/moderation/{id}/approve/)"""
+class DecisionPerevalView(APIView):
+    """Обрабатывает решения модераторов по перевалам."""
+    permission_classes = [IsModerator]
 
     @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['status'],
+            properties={
+                'status': openapi.Schema(type=openapi.TYPE_STRING, enum=['accepted', 'rejected'])
+            },
+        ),
         responses={
-            200: "Перевал подтверждён",
-            404: "Перевал не найден",
-            400: "Перевал уже подтверждён или отклонён"
+            200: "Перевал обновлён",
+            400: "Некорректный статус или перевал уже обработан",
+            404: "Перевал не найден"
         }
     )
     def put(self, request, pk, *args, **kwargs):
-        """Устанавливает статус `accepted`"""
         try:
             pereval = PerevalAdded.objects.get(pk=pk)
         except PerevalAdded.DoesNotExist:
             return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
 
-        if pereval.status != "pending":
+        new_status = request.data.get("status")
+        if new_status not in ["accepted", "rejected"]:
+            return Response({"state": 0, "message": "Некорректный статус"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if pereval.status in ["accepted", "rejected"]:
             return Response({"state": 0, "message": "Перевал уже обработан"}, status=status.HTTP_400_BAD_REQUEST)
 
-        pereval.status = "accepted"
+        pereval.status = new_status
         pereval.save()
+        return Response({"state": 1, "message": f"Перевал {new_status}"}, status=status.HTTP_200_OK)
 
-        return Response({"state": 1, "message": "Перевал подтверждён"}, status=status.HTTP_200_OK)
 
 
-class RejectPerevalView(APIView):
-    """Отклонение перевала (PUT /api/moderation/{id}/reject/)"""
+# class ApprovePerevalView(APIView):
+#     """Подтверждение перевала (PUT /api/moderation/{id}/approve/)"""
+#
+#     @swagger_auto_schema(
+#         responses={
+#             200: "Перевал подтверждён",
+#             404: "Перевал не найден",
+#             400: "Перевал уже подтверждён или отклонён"
+#         }
+#     )
+#     def put(self, request, pk, *args, **kwargs):
+#         """Устанавливает статус `accepted`"""
+#         try:
+#             pereval = PerevalAdded.objects.get(pk=pk)
+#         except PerevalAdded.DoesNotExist:
+#             return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+#
+#         if pereval.status != "pending":
+#             return Response({"state": 0, "message": "Перевал уже обработан"}, status=status.HTTP_400_BAD_REQUEST)
+#
+#         pereval.status = "accepted"
+#         pereval.save()
+#
+#         return Response({"state": 1, "message": "Перевал подтверждён"}, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(
-        responses={
-            200: "Перевал отклонён",
-            404: "Перевал не найден",
-            400: "Перевал уже подтверждён или отклонён"
-        }
-    )
-    def put(self, request, pk, *args, **kwargs):
-        """Устанавливает статус `rejected`"""
-        try:
-            pereval = PerevalAdded.objects.get(pk=pk)
-        except PerevalAdded.DoesNotExist:
-            return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
 
-        if pereval.status != "pending":
-            return Response({"state": 0, "message": "Перевал уже обработан"}, status=status.HTTP_400_BAD_REQUEST)
-
-        pereval.status = "rejected"
-        pereval.save()
-
-        return Response({"state": 1, "message": "Перевал отклонён"}, status=status.HTTP_200_OK)
-
+# class RejectPerevalView(APIView):
+#     """Отклонение перевала (PUT /api/moderation/{id}/reject/)"""
+#
+#     @swagger_auto_schema(
+#         responses={
+#             200: "Перевал отклонён",
+#             404: "Перевал не найден",
+#             400: "Перевал уже подтверждён или отклонён"
+#         }
+#     )
+#     def put(self, request, pk, *args, **kwargs):
+#         """Устанавливает статус `rejected`"""
+#         try:
+#             pereval = PerevalAdded.objects.get(pk=pk)
+#         except PerevalAdded.DoesNotExist:
+#             return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+#
+#         if pereval.status != "pending":
+#             return Response({"state": 0, "message": "Перевал уже обработан"}, status=status.HTTP_400_BAD_REQUEST)
+#
+#         pereval.status = "rejected"
+#         pereval.save()
+#
+#         return Response({"state": 1, "message": "Перевал отклонён"}, status=status.HTTP_200_OK)
+#
 
 class SubmitPerevalForModerationView(APIView):
     """Отправка перевала на модерацию (PUT /api/passes/{id}/submit/)"""

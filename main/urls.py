@@ -38,11 +38,8 @@ urlpatterns = [
     # список перевалов со статусом "pending".
     path('api/moderation/', ModerationListView.as_view(), name='moderation-list'),
 
-    # подтверждение перевала (status = "accepted").
-    path('api/moderation/<int:pk>/approve/', ApprovePerevalView.as_view(), name='approve-pereval'),
-
-    # отклонение перевала (status = "rejected").
-    path('api/moderation/<int:pk>/reject/', RejectPerevalView.as_view(), name='reject-pereval'),
+    # подтверждение перевала (status = "moderation") и отклонение перевала (status = "rejected").
+    path('api/moderation/<int:pk>/moderation/', ApprovePerevalView.as_view(), name='approve-moderation'),
 
     # отправление перевала на модерацию (status = "pending").
     path('api/passes/<int:pk>/submit/', SubmitPerevalForModerationView.as_view(), name='submit-pereval'),
