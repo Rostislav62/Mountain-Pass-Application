@@ -5,11 +5,18 @@ from main.views import (SubmitDataListView, UploadImageView, SubmitDataView, Sub
                         SubmitDataDeleteView, DeletePerevalPhotoView, PerevalPhotosListView,
                         ModerationListView, DecisionPerevalView, SubmitPerevalForModerationView)
 from rest_framework.routers import DefaultRouter
+
 router = DefaultRouter()
 
 urlpatterns = [
     # Маршрут для загрузки изображений
     path('uploadImage/', UploadImageView.as_view(), name='upload-image'),
+
+    # Получение списка изображений перевала
+    path('uploadImage/<int:id>/', PerevalPhotosListView.as_view(), name='upload-image-list'),
+
+    # Удаление фотографии
+    path('uploadImage/<int:photo_id>/', DeletePerevalPhotoView.as_view(), name='delete-upload-image'),
 
     path('submitData/', SubmitDataView.as_view(), name='submit-data'),  # POST-запросы
 
@@ -22,12 +29,6 @@ urlpatterns = [
     # Полное удаление перевала (DELETE) перенесено в submitData/
     path('submitData/<int:pk>/delete/', SubmitDataDeleteView.as_view(), name='submit-data-delete'),
 
-    # Полное удаление фотографии (DELETE photo)
-    path('api/passes/<int:pk>/photos/<int:photo_id>/delete/', DeletePerevalPhotoView.as_view(), name='delete-photo'),
-
-    # Получение id фотографии (DELETE photo)
-    path('api/passes/<int:pk>/photos/', PerevalPhotosListView.as_view(), name='pereval-photos-list'),
-
     # список перевалов со статусом "pending".
     path('moderation/', ModerationListView.as_view(), name='moderation-list'),
 
@@ -38,6 +39,5 @@ urlpatterns = [
     path('api/passes/<int:pk>/submit/', SubmitPerevalForModerationView.as_view(), name='submit-pereval'),
 
     # Добавляем маршруты, например:
-    # router.register(r'perevals', views.PerevalViewSet, basename='pereval')
     path('', include(router.urls)),  # Основные маршруты API
 ]
