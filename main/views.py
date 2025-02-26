@@ -36,6 +36,7 @@ from main.permissions import IsSuperAdmin
 from main.serializers import PerevalUserSerializer
 from main.permissions import IsModerator
 
+from rest_framework.permissions import IsAuthenticated
 
 class SubmitDataView(APIView):
     """API для приёма и получения данных о перевале"""
@@ -366,66 +367,58 @@ class SubmitDataReplaceView(UpdateAPIView):
 
         return Response({"state": 0, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-    class SubmitDataDeleteView(APIView):
-        """Удаление перевала (DELETE)"""
-
-        @swagger_auto_schema(
-            responses={
-                200: "Перевал удалён",
-                400: "Удаление запрещено: статус не `new`",
-                404: "Перевал не найден"
-            }
-        )
-        def delete(self, request, pk, *args, **kwargs):
-            """Удаляет перевал, если статус `new`"""
-            user_email = request.user.email  # Берём email из JWT-токена
-
-            try:
-                pereval = PerevalAdded.objects.get(pk=pk)
-            except PerevalAdded.DoesNotExist:
-                return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
-
-            # 🔒 Проверяем, является ли пользователь автором перевала
-            if pereval.user.email != user_email:
-                return Response({"state": 0, "message": "Вы не являетесь владельцем этого перевала"},
-                                status=status.HTTP_403_FORBIDDEN)
-
-            if pereval.status != "new":
-                return Response(
-                    {"state": 0, "message": "Удаление запрещено: статус перевала не `new`"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            pereval.delete()
-            return Response({"state": 1, "message": "Перевал успешно удалён"}, status=status.HTTP_200_OK)
-
 
 class SubmitDataDeleteView(APIView):
     """Удаление перевала (DELETE)"""
+
+    permission_classes = [IsAuthenticated]  # Удалять могут только авторизованные пользователи
 
     @swagger_auto_schema(
         responses={
             200: "Перевал удалён",
             400: "Удаление запрещено: статус не `new`",
+            403: "Нет прав на удаление",
             404: "Перевал не найден"
         }
     )
     def delete(self, request, pk, *args, **kwargs):
-        """Удаляет перевал, если статус `new`"""
+        """
+        Удаляет перевал, если статус `new`
+        ✅ Админ (`IsSuperAdmin`) может удалять всё.
+        ✅ Модератор (`IsModerator`) может удалять, только если статус `new`.
+        ✅ Обычный пользователь может удалить свой перевал, пока он в статусе `new`.
+        """
+
         try:
             pereval = PerevalAdded.objects.get(pk=pk)
         except PerevalAdded.DoesNotExist:
             return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
 
-        if pereval.status != "new":
-            return Response(
-                {"state": 0, "message": "Удаление запрещено: статус перевала не `new`"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # ✅ Администратор может удалить любой перевал без ограничений
+        if request.user.is_superuser:
+            pereval.delete()
+            return Response({"state": 1, "message": "Перевал удалён администратором"}, status=status.HTTP_200_OK)
 
-        pereval.delete()
-        return Response({"state": 1, "message": "Перевал успешно удалён"}, status=status.HTTP_200_OK)
+        # ✅ Проверяем, является ли пользователь автором перевала
+        if pereval.user.email == request.user.email:
+            if pereval.status.id == 1:  # Статус "new"
+                pereval.delete()
+                return Response({"state": 1, "message": "Перевал удалён пользователем"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"state": 0, "message": "Вы не можете удалить перевал с текущим статусом"},
+                                status=status.HTTP_400_BAD_REQUEST)
 
+        # ✅ Проверяем, является ли пользователь модератором
+        if hasattr(request.user, "moderator_group"):  # Проверяем, является ли пользователь модератором
+            if pereval.status.id == 1:  # Статус "new"
+                pereval.delete()
+                return Response({"state": 1, "message": "Перевал удалён модератором"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"state": 0, "message": "Модератор может удалить только перевалы со статусом `new`"},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"state": 0, "message": "У вас нет прав на удаление этого перевала"},
+                        status=status.HTTP_403_FORBIDDEN)
 
 class DeletePerevalPhotoView(APIView):
     """Удаление фотографии перевала (DELETE)"""

@@ -1,8 +1,8 @@
 # /Mountain Pass Application/main/urls.py
 
 from django.urls import path, include  # Импортируем path для маршрутов
-from main.views import (SubmitDataUpdateView, SubmitDataListView, UploadImageView, SubmitDataView, SubmitDataDetailView,
-                        SubmitDataReplaceView, SubmitDataDeleteView, DeletePerevalPhotoView, PerevalPhotosListView,
+from main.views import (SubmitDataListView, UploadImageView, SubmitDataView, SubmitDataDetailView,
+                        SubmitDataDeleteView, DeletePerevalPhotoView, PerevalPhotosListView,
                         ModerationListView, DecisionPerevalView, SubmitPerevalForModerationView)
 from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
@@ -16,17 +16,11 @@ urlpatterns = [
     # Маршрут для получения списка перевалов пользователя по email (GET /submitData/?user__email=<email>)
     path('submitData/list/', SubmitDataListView.as_view(), name='submit-data-list'),
 
-    # Маршрут для редактирования существующего перевала (PATCH /submitData/<id>/)
-    path('submitData/<int:pk>/', SubmitDataUpdateView.as_view(), name='submit-data-update'),
-
     # Маршрут для получения информации о конкретном перевале (GET /submitData/<id>/info/)
     path('submitData/<int:pk>/info/', SubmitDataDetailView.as_view(), name='submit-data-detail'),
 
-    # Полное обновление перевала (PUT)
-    path('api/passes/<int:pk>/', SubmitDataReplaceView.as_view(), name='submit-data-replace'),
-
-    # Полное удаление перевала (DELETE)
-    path('api/passes/<int:pk>/delete/', SubmitDataDeleteView.as_view(), name='submit-data-delete'),
+    # Полное удаление перевала (DELETE) перенесено в submitData/
+    path('submitData/<int:pk>/delete/', SubmitDataDeleteView.as_view(), name='submit-data-delete'),
 
     # Полное удаление фотографии (DELETE photo)
     path('api/passes/<int:pk>/photos/<int:photo_id>/delete/', DeletePerevalPhotoView.as_view(), name='delete-photo'),
