@@ -452,6 +452,12 @@ class PerevalPhotosListView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+import logging
+from django.http import JsonResponse
+
+# Настроим логгер
+logger = logging.getLogger(__name__)
+
 class DeletePerevalPhotoView(APIView):
     """Удаление фотографии перевала"""
 
@@ -467,18 +473,24 @@ class DeletePerevalPhotoView(APIView):
     )
     def delete(self, request, photo_id, *args, **kwargs):
         """Удаляет фотографию, если у пользователя есть права"""
+        logger.info(f"🚀 DELETE /uploadImage/{photo_id}/ вызван")
+
         try:
             photo = PerevalImages.objects.get(pk=photo_id)
         except PerevalImages.DoesNotExist:
+            logger.warning(f"❌ Фотография {photo_id} не найдена")
             return Response({"state": 0, "message": "Фотография не найдена"}, status=status.HTTP_404_NOT_FOUND)
 
         # ✅ Проверяем, является ли пользователь автором перевала
         if request.user.is_superuser or photo.pereval.user.email == request.user.email:
             photo.delete()
+            logger.info(f"✅ Фотография {photo_id} удалена пользователем {request.user.email}")
             return Response({"state": 1, "message": "Фотография удалена"}, status=status.HTTP_200_OK)
 
+        logger.warning(f"⛔ У пользователя {request.user.email} нет прав на удаление {photo_id}")
         return Response({"state": 0, "message": "У вас нет прав на удаление этой фотографии"},
                         status=status.HTTP_403_FORBIDDEN)
+
 
 
 
