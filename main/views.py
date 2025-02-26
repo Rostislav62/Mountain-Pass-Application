@@ -100,10 +100,12 @@ class SubmitDataView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+import uuid  # Импортируем для генерации уникальных имен файлов
+
 class UploadImageView(APIView):
     """📌 API для загрузки изображений перевалов"""
 
-    parser_classes = (MultiPartParser, FormParser)  # 📌 Поддержка multipart/form-data
+    parser_classes = (MultiPartParser, FormParser)
 
     @swagger_auto_schema(
         operation_description="📌 Загрузка изображения для перевала",
@@ -128,13 +130,18 @@ class UploadImageView(APIView):
     def post(self, request):
         """📌 Принимает изображение, сохраняет его и записывает в БД"""
 
+        # Проверяем наличие `pereval_id` в запросе
+        pereval_id = request.data.get('pereval_id')
+        if not pereval_id:
+            return Response({"status": 400, "message": "Не указан ID перевала"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         # Проверяем, есть ли файл в запросе
         if 'image' not in request.FILES:
             return Response({"status": 400, "message": "Файл изображения обязателен"},
                             status=status.HTTP_400_BAD_REQUEST)
 
         image = request.FILES['image']
-        pereval_id = request.data.get('pereval_id')
 
         # Проверяем, существует ли перевал
         try:
@@ -144,12 +151,15 @@ class UploadImageView(APIView):
 
         # Определяем путь для сохранения файла
         upload_dir = os.path.join(settings.MEDIA_ROOT, "pereval_images")
-        if not os.path.exists(upload_dir):
-            os.makedirs(upload_dir)
+        os.makedirs(upload_dir, exist_ok=True)  # Создаём папку, если её нет
 
-        # Сохраняем файл в `MEDIA_ROOT/pereval_images/`
-        file_path = os.path.join("pereval_images", image.name)
+        # Генерируем уникальное имя файла
+        file_extension = image.name.split('.')[-1]  # Получаем расширение файла
+        unique_filename = f"{uuid.uuid4()}.{file_extension}"  # Генерируем уникальное имя
+        file_path = os.path.join("pereval_images", unique_filename)
         full_path = os.path.join(settings.MEDIA_ROOT, file_path)
+
+        # Сохраняем файл
         default_storage.save(full_path, ContentFile(image.read()))
 
         # Сохраняем путь в БД
