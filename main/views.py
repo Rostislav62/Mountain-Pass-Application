@@ -101,14 +101,18 @@ class SubmitDataView(APIView):
 
 
 import logging
-
+import re
 logger = logging.getLogger(__name__)
 
 class UploadImageView(APIView):
     """📌 API для загрузки изображений перевалов"""
 
     parser_classes = (MultiPartParser, FormParser)  # 📌 Поддержка multipart/form-data
-
+    def sanitize_filename(self, filename):
+        """🔥 Очищает имя файла от запрещённых символов"""
+        filename = filename.strip().replace(" ", "_")  # Убираем пробелы
+        filename = re.sub(r'[^\w.\-_]', '', filename)  # Убираем запрещённые символы
+        return filename
     @swagger_auto_schema(
         operation_description="📌 Загрузка изображения для перевала",
         manual_parameters=[
