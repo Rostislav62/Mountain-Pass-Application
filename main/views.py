@@ -100,8 +100,8 @@ class SubmitDataView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-import re
 import logging
+import re
 logger = logging.getLogger(__name__)
 
 class UploadImageView(APIView):
@@ -179,6 +179,7 @@ class UploadImageView(APIView):
         upload_dir = os.path.join(settings.MEDIA_ROOT, "pereval_images")
         if not os.path.exists(upload_dir):
             os.makedirs(upload_dir)
+            logger.info(f"📂 Создана папка для изображений: {upload_dir}")
 
         counter = 1
         file_name = f"{base_name}{ext}"
