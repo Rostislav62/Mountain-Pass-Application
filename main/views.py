@@ -432,54 +432,54 @@ class SubmitDataDeleteView(APIView):
         return Response({"state": 0, "message": "У вас нет прав на удаление этого перевала"},
                         status=status.HTTP_403_FORBIDDEN)
 
+class DeletePerevalPhotoView(APIView):
+    """Удаление фотографии перевала (DELETE)"""
+
+    @swagger_auto_schema(
+        responses={
+            200: "Фотография удалена",
+            400: "Удаление запрещено: статус перевала не `new`",
+            404: "Фотография или перевал не найдены"
+        }
+    )
+    def delete(self, request, pk, photo_id, *args, **kwargs):
+        """Удаляет фотографию, если статус перевала `new`"""
+        try:
+            pereval = PerevalAdded.objects.get(pk=pk)
+        except PerevalAdded.DoesNotExist:
+            return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        if pereval.status != "new":
+            return Response(
+                {"state": 0, "message": "Удаление запрещено: статус перевала не `new`"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            photo = PerevalImages.objects.get(pk=photo_id, pereval=pereval)
+        except PerevalImages.DoesNotExist:
+            return Response({"state": 0, "message": "Фотография не найдена"}, status=status.HTTP_404_NOT_FOUND)
+
+        photo.delete()
+        return Response({"state": 1, "message": "Фотография успешно удалена"}, status=status.HTTP_200_OK)
+
 
 class PerevalPhotosListView(APIView):
     """Получение списка фотографий перевала"""
 
     @swagger_auto_schema(
-        operation_description="📌 Получение списка фотографий перевала",
-        responses={200: PerevalImagesSerializer(many=True)}
+        responses={200: PerevalImagesSerializer(many=True)},
     )
-    def get(self, request, id, *args, **kwargs):
+    def get(self, request, pk, *args, **kwargs):
         """Возвращает список фото для конкретного перевала"""
         try:
-            pereval = PerevalAdded.objects.get(pk=id)
+            pereval = PerevalAdded.objects.get(pk=pk)
         except PerevalAdded.DoesNotExist:
             return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
 
         photos = PerevalImages.objects.filter(pereval=pereval)
         serializer = PerevalImagesSerializer(photos, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class DeletePerevalPhotoView(APIView):
-    """Удаление фотографии перевала"""
-
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(
-        operation_description="📌 Удаление фотографии перевала",
-        responses={
-            200: "Фотография удалена",
-            403: "Нет прав на удаление",
-            404: "Фотография не найдена"
-        }
-    )
-    def delete(self, request, photo_id, *args, **kwargs):
-        """Удаляет фотографию, если у пользователя есть права"""
-        try:
-            photo = PerevalImages.objects.get(pk=photo_id)
-        except PerevalImages.DoesNotExist:
-            return Response({"state": 0, "message": "Фотография не найдена"}, status=status.HTTP_404_NOT_FOUND)
-
-        # ✅ Проверяем, является ли пользователь автором перевала
-        if request.user.is_superuser or photo.pereval.user.email == request.user.email:
-            photo.delete()
-            return Response({"state": 1, "message": "Фотография удалена"}, status=status.HTTP_200_OK)
-
-        return Response({"state": 0, "message": "У вас нет прав на удаление этой фотографии"},
-                        status=status.HTTP_403_FORBIDDEN)
-
 
 
 class ModerationListView(APIView):
