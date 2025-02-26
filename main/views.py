@@ -101,7 +101,6 @@ class SubmitDataView(APIView):
 
 
 import logging
-import re
 logger = logging.getLogger(__name__)
 
 class UploadImageView(APIView):
@@ -136,12 +135,6 @@ class UploadImageView(APIView):
         ],
         responses={201: openapi.Response("Файл загружен")}
     )
-    def sanitize_filename(self, filename):
-        """🔥 Очищает имя файла от запрещённых символов"""
-        filename = filename.strip().replace(" ", "_")  # Заменяем пробелы на `_`
-        filename = re.sub(r'[^\w.\-]', '', filename)  # Убираем все символы, кроме букв, цифр, `_`, `-`, `.`
-        return filename
-
     def post(self, request):
         """📌 Принимает изображение, сохраняет его и записывает в БД"""
 
@@ -158,7 +151,7 @@ class UploadImageView(APIView):
 
         image = request.FILES['image']
         pereval_id = request.data.get('pereval_id')
-        title = request.data.get('title', image.name)
+        title = request.data.get('title', image.name)  # Используем имя файла, если `title` не передан
 
         # Проверяем, существует ли перевал
         try:
@@ -171,16 +164,14 @@ class UploadImageView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 🔹 Очищаем имя файла от запрещённых символов
-        sanitized_name = self.sanitize_filename(image.name)
-        base_name, ext = os.path.splitext(sanitized_name)
-
-        # 🔹 Генерируем уникальное имя файла
+        # Определяем путь для сохранения файла
         upload_dir = os.path.join(settings.MEDIA_ROOT, "pereval_images")
         if not os.path.exists(upload_dir):
             os.makedirs(upload_dir)
             logger.info(f"📂 Создана папка для изображений: {upload_dir}")
 
+        # Проверяем, нет ли уже файла с таким же именем и генерируем уникальное имя
+        base_name, ext = os.path.splitext(image.name)
         counter = 1
         file_name = f"{base_name}{ext}"
         file_path = os.path.join(upload_dir, file_name)
@@ -190,7 +181,7 @@ class UploadImageView(APIView):
             file_path = os.path.join(upload_dir, file_name)
             counter += 1
 
-        # 🔹 Сохраняем файл
+        # Сохраняем файл
         try:
             default_storage.save(file_path, ContentFile(image.read()))
             logger.info(f"✅ Файл сохранён: {file_path}")
@@ -201,7 +192,7 @@ class UploadImageView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        # 🔹 Записываем в БД
+        # Записываем в БД
         try:
             image_record = PerevalImages.objects.create(
                 pereval=pereval,
