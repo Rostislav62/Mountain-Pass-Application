@@ -99,84 +99,49 @@ class SubmitDataView(APIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-import logging
 import re
-logger = logging.getLogger(__name__)
+import uuid
 
 class UploadImageView(APIView):
     """📌 API для загрузки изображений перевалов"""
 
-    parser_classes = (MultiPartParser, FormParser)  # 📌 Поддержка multipart/form-data
+    parser_classes = (MultiPartParser, FormParser)
+
     def sanitize_filename(self, filename):
         """🔥 Очищает имя файла от запрещённых символов"""
         filename = filename.strip().replace(" ", "_")  # Убираем пробелы
         filename = re.sub(r'[^\w.\-_]', '', filename)  # Убираем запрещённые символы
+        if not filename:  # Если после очистки имя пустое — генерируем случайное
+            filename = f"file_{uuid.uuid4().hex}.jpg"
         return filename
-    @swagger_auto_schema(
-        operation_description="📌 Загрузка изображения для перевала",
-        manual_parameters=[
-            openapi.Parameter(
-                'pereval_id',
-                openapi.IN_FORM,
-                description="📌 ID перевала, к которому прикрепляется изображение",
-                type=openapi.TYPE_INTEGER,
-                required=True
-            ),
-            openapi.Parameter(
-                'image',
-                openapi.IN_FORM,
-                description="📌 Файл изображения",
-                type=openapi.TYPE_FILE,
-                required=True
-            ),
-            openapi.Parameter(
-                'title',
-                openapi.IN_FORM,
-                description="📌 Название изображения (опционально)",
-                type=openapi.TYPE_STRING,
-                required=False
-            )
-        ],
-        responses={201: openapi.Response("Файл загружен")}
-    )
+
     def post(self, request):
         """📌 Принимает изображение, сохраняет его и записывает в БД"""
 
-        logger.info("📥 Получен запрос на загрузку изображения.")
-        logger.info(f"🔹 Данные запроса: {request.data}")
-
-        # Проверяем, переданы ли все нужные данные
         if 'image' not in request.FILES:
-            logger.error("❌ Ошибка: Файл изображения не передан.")
-            return Response(
-                {"status": 400, "message": "Файл изображения обязателен"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"status": 400, "message": "Файл изображения обязателен"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         image = request.FILES['image']
         pereval_id = request.data.get('pereval_id')
-        title = request.data.get('title', image.name)  # Используем имя файла, если `title` не передан
+        title = request.data.get('title', "Изображение перевала")
 
         # Проверяем, существует ли перевал
         try:
             pereval = PerevalAdded.objects.get(id=pereval_id)
-            logger.info(f"✅ Найден перевал ID: {pereval_id}")
         except PerevalAdded.DoesNotExist:
-            logger.error(f"❌ Ошибка: Перевал ID {pereval_id} не найден.")
-            return Response(
-                {"status": 400, "message": "Перевал не найден"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"status": 400, "message": "Перевал не найден"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
-        # Определяем путь для сохранения файла
+        # 🔹 Очищаем имя файла от запрещённых символов
+        sanitized_name = self.sanitize_filename(image.name)
+        base_name, ext = os.path.splitext(sanitized_name)
+
+        # 🔹 Генерируем уникальное имя файла
         upload_dir = os.path.join(settings.MEDIA_ROOT, "pereval_images")
         if not os.path.exists(upload_dir):
             os.makedirs(upload_dir)
-            logger.info(f"📂 Создана папка для изображений: {upload_dir}")
 
-        # Проверяем, нет ли уже файла с таким же именем и генерируем уникальное имя
-        base_name, ext = os.path.splitext(image.name)
         counter = 1
         file_name = f"{base_name}{ext}"
         file_path = os.path.join(upload_dir, file_name)
@@ -186,36 +151,29 @@ class UploadImageView(APIView):
             file_path = os.path.join(upload_dir, file_name)
             counter += 1
 
-        # Сохраняем файл
+        # 🔹 Сохраняем файл
         try:
-            default_storage.save(file_path, ContentFile(image.read()))
-            logger.info(f"✅ Файл сохранён: {file_path}")
+            with open(file_path, "wb") as f:
+                for chunk in image.chunks():
+                    f.write(chunk)
+            print(f"✅ Файл сохранён: {file_path}")
         except Exception as e:
-            logger.error(f"❌ Ошибка при сохранении файла: {str(e)}")
-            return Response(
-                {"status": 500, "message": f"Ошибка при сохранении файла: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response({"status": 500, "message": f"Ошибка при сохранении файла: {str(e)}"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # Записываем в БД
+        # 🔹 Записываем в БД
         try:
             image_record = PerevalImages.objects.create(
                 pereval=pereval,
                 data=os.path.join("pereval_images", file_name),  # Относительный путь
                 title=title
             )
-            logger.info(f"✅ Изображение записано в БД с ID: {image_record.id}")
         except Exception as e:
-            logger.error(f"❌ Ошибка при записи в БД: {str(e)}")
-            return Response(
-                {"status": 500, "message": f"Ошибка при записи в БД: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response({"status": 500, "message": f"Ошибка при записи в БД: {str(e)}"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        return Response(
-            {"status": 201, "message": "Файл загружен", "image_id": image_record.id},
-            status=status.HTTP_201_CREATED
-        )
+        return Response({"status": 201, "message": "Файл загружен", "image_id": image_record.id},
+                        status=status.HTTP_201_CREATED)
 
 
 class UploadTrackView(APIView):
