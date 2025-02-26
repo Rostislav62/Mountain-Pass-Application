@@ -28,7 +28,7 @@ DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 DEBUG_PROPAGATE_EXCEPTIONS = True  # Выводим полные ошибки в консоль
 
 # Для локального запускм
-# ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 
 # ДЛя запуска на railway
 # ALLOWED_HOSTS = [
@@ -40,13 +40,13 @@ DEBUG_PROPAGATE_EXCEPTIONS = True  # Выводим полные ошибки в
 
 
 # ДЛя запуска на pythonanywhere.com
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "rostislav62.pythonanywhere.com").split(",")
+# ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "rostislav62.pythonanywhere.com").split(",")
 
 
 # CSRF_TRUSTED_ORIGINS = ["https://mountain-pass-application-production.up.railway.app"]
 # CSRF_TRUSTED_ORIGINS = ['https://rostislav62.pythonanywhere.com']
 
-CSRF_TRUSTED_ORIGINS = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "https://rostislav62.pythonanywhere.com").split(",")
+# CSRF_TRUSTED_ORIGINS = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "https://rostislav62.pythonanywhere.com").split(",")
 
 
 # Application definition
@@ -158,16 +158,16 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 # Database
 # Для PostgreSQL
 #
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'mountain_pass_db',
-#         'USER': 'postgres',
-#         'PASSWORD': '1',
-#         'HOST': 'localhost',
-#         'PORT': 5432,
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mountain_pass_db',
+        'USER': 'postgres',
+        'PASSWORD': '1',
+        'HOST': 'localhost',
+        'PORT': 5432,
+    }
+}
 
 # Для Railway
 # DATABASES = {
@@ -179,16 +179,16 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 # }
 
 #  Для MySQL
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('FSTR_DB_NAME', 'default_db_name'),
-        'USER': os.getenv('FSTR_DB_LOGIN', 'default_user'),
-        'PASSWORD': os.getenv('FSTR_DB_PASS', 'default_pass'),
-        'HOST': os.getenv('FSTR_DB_HOST', '127.0.0.1'),
-        'PORT': os.getenv('FSTR_DB_PORT', '3306'),
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': os.getenv('FSTR_DB_NAME', 'default_db_name'),
+#         'USER': os.getenv('FSTR_DB_LOGIN', 'default_user'),
+#         'PASSWORD': os.getenv('FSTR_DB_PASS', 'default_pass'),
+#         'HOST': os.getenv('FSTR_DB_HOST', '127.0.0.1'),
+#         'PORT': os.getenv('FSTR_DB_PORT', '3306'),
+#     }
+# }
 
 
 
@@ -240,7 +240,7 @@ SWAGGER_SETTINGS = {
 }
 
 
-# Создаём папку для логов, если её нет
+Создаём папку для логов, если её нет
 LOGS_DIR = os.path.join(BASE_DIR, 'logs')
 if not os.path.exists(LOGS_DIR):
     os.makedirs(LOGS_DIR)
