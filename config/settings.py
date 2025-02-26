@@ -27,8 +27,8 @@ DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
 DEBUG_PROPAGATE_EXCEPTIONS = True  # Выводим полные ошибки в консоль
 
-# Для локального запускм
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
+# # Для локального запускм
+# ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 
 # ДЛя запуска на railway
 # ALLOWED_HOSTS = [
@@ -40,7 +40,7 @@ ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 
 
 # ДЛя запуска на pythonanywhere.com
-# ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "rostislav62.pythonanywhere.com").split(",")
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "rostislav62.pythonanywhere.com").split(",")
 
 
 # CSRF_TRUSTED_ORIGINS = ["https://mountain-pass-application-production.up.railway.app"]
