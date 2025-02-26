@@ -7,6 +7,7 @@
 # from django.contrib.auth.decorators import login_required  # Проверяем администратора
 import traceback
 import os
+import logging
 from main.db_service import DatabaseService
 from main.models import PerevalImages
 from django.conf import settings
@@ -100,13 +101,13 @@ class SubmitDataView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)  # 🔹 Логирование событий
+
 
 class UploadImageView(APIView):
     """📌 API для загрузки изображений перевалов"""
 
-    parser_classes = (MultiPartParser, FormParser)  # 📌 Поддержка multipart/form-data
+    parser_classes = (MultiPartParser, FormParser)  # 🔹 Поддержка загрузки файлов через multipart/form-data
 
     @swagger_auto_schema(
         operation_description="📌 Загрузка изображения для перевала",
@@ -135,14 +136,13 @@ class UploadImageView(APIView):
         ],
         responses={201: openapi.Response("Файл загружен")}
     )
-
     def post(self, request):
         """📌 Принимает изображение, сохраняет его и записывает в БД"""
 
         logger.info("📥 Получен запрос на загрузку изображения.")
         logger.info(f"🔹 Данные запроса: {request.data}")
 
-        # Проверяем, переданы ли все нужные данные
+        # 🔹 Проверяем, переданы ли все нужные данные
         if 'image' not in request.FILES:
             logger.error("❌ Ошибка: Файл изображения не передан.")
             return Response(
@@ -150,11 +150,11 @@ class UploadImageView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        image = request.FILES['image']
-        pereval_id = request.data.get('pereval_id')
-        title = request.data.get('title', image.name)  # Используем имя файла, если `title` не передан
+        image = request.FILES['image']  # 🔹 Получаем загружаемый файл
+        pereval_id = request.data.get('pereval_id')  # 🔹 Получаем ID перевала
+        title = request.data.get('title', image.name)  # 🔹 Если title не передан, используем имя файла
 
-        # Проверяем, существует ли перевал
+        # 🔹 Проверяем, существует ли перевал с таким ID
         try:
             pereval = PerevalAdded.objects.get(id=pereval_id)
             logger.info(f"✅ Найден перевал ID: {pereval_id}")
@@ -165,28 +165,30 @@ class UploadImageView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Определяем путь для сохранения файла
+        # 🔹 Определяем путь для сохранения файла (создаём папку `pereval_images`, если её нет)
         upload_dir = os.path.join(settings.MEDIA_ROOT, "pereval_images")
         if not os.path.exists(upload_dir):
             os.makedirs(upload_dir)
             logger.info(f"📂 Создана папка для изображений: {upload_dir}")
 
-        # Проверяем, нет ли уже файла с таким же именем и генерируем уникальное имя
-        base_name, ext = os.path.splitext(image.name)
-        base_name = 'Image'
+        # 🔹 Генерируем уникальное имя файла
+        base_name, ext = os.path.splitext(image.name)  # 🔹 Разделяем имя файла и расширение
         counter = 1
-        file_name = f"{base_name}{ext}"
-        file_path = os.path.join(upload_dir, file_name)
+        file_name = f"{base_name}{ext}"  # 🔹 Начинаем с оригинального имени
+        relative_path = os.path.join("pereval_images", file_name)  # 🔹 Используем ОТНОСИТЕЛЬНЫЙ путь (исправление!)
+        full_path = os.path.join(settings.MEDIA_ROOT, relative_path)  # 🔹 Абсолютный путь для проверки существования
 
-        while os.path.exists(file_path):
+        # 🔹 Если файл с таким именем уже есть, добавляем `_1`, `_2` и т. д.
+        while os.path.exists(full_path):
             file_name = f"{base_name}_{counter}{ext}"
-            file_path = os.path.join(upload_dir, file_name)
+            relative_path = os.path.join("pereval_images", file_name)
+            full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
             counter += 1
 
-        # Сохраняем файл
+        # 🔹 Сохраняем файл
         try:
-            default_storage.save(file_path, ContentFile(image.read()))
-            logger.info(f"✅ Файл сохранён: {file_path}")
+            default_storage.save(relative_path, ContentFile(image.read()))  # 🔹 Сохраняем ОТНОСИТЕЛЬНЫЙ путь
+            logger.info(f"✅ Файл сохранён: {relative_path}")
         except Exception as e:
             logger.error(f"❌ Ошибка при сохранении файла: {str(e)}")
             return Response(
@@ -194,11 +196,11 @@ class UploadImageView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        # Записываем в БД
+        # 🔹 Записываем в БД путь к файлу и название
         try:
             image_record = PerevalImages.objects.create(
                 pereval=pereval,
-                data=os.path.join("pereval_images", file_name),  # Относительный путь
+                data=relative_path,  # 🔹 Сохраняем ОТНОСИТЕЛЬНЫЙ путь в БД
                 title=title
             )
             logger.info(f"✅ Изображение записано в БД с ID: {image_record.id}")
