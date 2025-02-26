@@ -1,12 +1,11 @@
-#  /Mountain Pass Application/main/urls.py
+# /Mountain Pass Application/main/urls.py
+
 from django.urls import path, include  # Импортируем path для маршрутов
 from main.views import (SubmitDataUpdateView, SubmitDataListView, UploadImageView, SubmitDataView, SubmitDataDetailView,
                         SubmitDataReplaceView, SubmitDataDeleteView, DeletePerevalPhotoView, PerevalPhotosListView,
-                        ModerationListView, ApprovePerevalView, RejectPerevalView, SubmitPerevalForModerationView,
-                        ApiSettingsView)  # Импортируем нужные представления
+                        ModerationListView, DecisionPerevalView, SubmitPerevalForModerationView)
 from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
-
 
 urlpatterns = [
     # Маршрут для загрузки изображений
@@ -36,16 +35,13 @@ urlpatterns = [
     path('api/passes/<int:pk>/photos/', PerevalPhotosListView.as_view(), name='pereval-photos-list'),
 
     # список перевалов со статусом "pending".
-    path('api/moderation/', ModerationListView.as_view(), name='moderation-list'),
+    path('moderation/', ModerationListView.as_view(), name='moderation-list'),
 
-    # подтверждение перевала (status = "moderation") и отклонение перевала (status = "rejected").
-    path('api/moderation/<int:pk>/moderation/', ApprovePerevalView.as_view(), name='approve-moderation'),
+    # Решение по перевалу (одобрение / отклонение)
+    path('moderation/<int:pk>/decision/', DecisionPerevalView.as_view(), name='decision-pereval'),
 
     # отправление перевала на модерацию (status = "pending").
     path('api/passes/<int:pk>/submit/', SubmitPerevalForModerationView.as_view(), name='submit-pereval'),
-
-    # Управление настройками API
-    path('api/settings/', ApiSettingsView.as_view(), name='api-settings'),
 
     # Добавляем маршруты, например:
     # router.register(r'perevals', views.PerevalViewSet, basename='pereval')
