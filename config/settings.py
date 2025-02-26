@@ -20,23 +20,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-err^oskgs2y1-p8x4v6c418r22dk9n9p#d*%eyhj_$i4*o75m('
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = False
-# DEBUG = True
 DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
 DEBUG_PROPAGATE_EXCEPTIONS = True  # Выводим полные ошибки в консоль
-
-# # Для локального запускм
-# ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
-
-# ДЛя запуска на railway
-# ALLOWED_HOSTS = [
-#     "mountain-pass-application-production.up.railway.app",  # Продакшн-домен на Railway
-#     "127.0.0.1",  # Локальный хост для разработки
-#     "localhost",  # Используется для локального запуска Django
-#     ".ngrok-free.app",  # Разрешает все поддомены Ngrok
-# ]
 
 
 # ДЛя запуска на pythonanywhere.com
