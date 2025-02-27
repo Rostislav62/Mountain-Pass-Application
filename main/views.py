@@ -9,7 +9,7 @@ import traceback
 import os
 import logging
 from main.db_service import DatabaseService
-from main.models import PerevalImages
+from main.models import PerevalImages, PerevalStatus
 from django.conf import settings
 from rest_framework.views import APIView
 from django.core.files.storage import default_storage
@@ -92,35 +92,18 @@ class SubmitDataView(APIView):
             traceback.print_exc()
             return Response({"status": 500, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    # def get(self, request):
+    #     """📌 GET: Получает список перевалов пользователя по email"""
+    #     email = request.query_params.get("user__email")
     #
-    # @swagger_auto_schema(
-    #     manual_parameters=[
-    #         openapi.Parameter(
-    #             "user__email",
-    #             openapi.IN_QUERY,
-    #             description="📌 Email пользователя для фильтрации перевалов",
-    #             type=openapi.TYPE_STRING,
-    #             required=True,
-    #         )
-    #     ],
-    #     responses={200: SubmitDataSerializer(many=True)},  # 📌 Описывает успешный ответ
-    # )
+    #     if not email:
+    #         return Response({"message": "Требуется email"}, status=status.HTTP_400_BAD_REQUEST)
+    #
+    #     perevals = PerevalAdded.objects.filter(user__email=email)
+    #     serializer = SubmitDataSerializer(perevals, many=True)
+    #
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-    def get(self, request):
-        """📌 GET: Получает список перевалов пользователя по email"""
-        email = request.query_params.get("user__email")
-
-        if not email:
-            return Response({"message": "Требуется email"}, status=status.HTTP_400_BAD_REQUEST)
-
-        perevals = PerevalAdded.objects.filter(user__email=email)
-        serializer = SubmitDataSerializer(perevals, many=True)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-logger = logging.getLogger(__name__)  # 🔹 Логирование событий
 
 
 class UploadImageView(APIView):
@@ -234,42 +217,6 @@ class UploadImageView(APIView):
             {"status": 201, "message": "Файл загружен", "image_id": image_record.id},
             status=status.HTTP_201_CREATED
         )
-
-
-# class UploadTrackView(APIView):
-#     """API для загрузки GPS-треков"""
-#
-#     def post(self, request):
-#         """Принимает GPS-трек (GPX/KML), сохраняет его и записывает в БД"""
-#
-#         # Проверяем, есть ли файл в запросе
-#         if 'track' not in request.FILES:
-#             return Response({"status": 400, "message": "Файл трека обязателен"}, status=status.HTTP_400_BAD_REQUEST)
-#
-#         track = request.FILES['track']
-#         pereval_id = request.data.get('pereval_id')
-#
-#         # Проверяем, существует ли перевал
-#         try:
-#             pereval = PerevalAdded.objects.get(id=pereval_id)
-#         except PerevalAdded.DoesNotExist:
-#             return Response({"status": 400, "message": "Перевал не найден"}, status=status.HTTP_400_BAD_REQUEST)
-#
-#         # Определяем путь для сохранения файла
-#         upload_dir = os.path.join(settings.MEDIA_ROOT, "pereval_tracks")
-#         if not os.path.exists(upload_dir):
-#             os.makedirs(upload_dir)
-#
-#         # Сохраняем файл в `MEDIA_ROOT/pereval_tracks/`
-#         file_path = os.path.join("pereval_tracks", track.name)
-#         full_path = os.path.join(settings.MEDIA_ROOT, file_path)
-#         default_storage.save(full_path, ContentFile(track.read()))
-#
-#         # Сохраняем путь в БД
-#         # track_record = PerevalGpsTracks.objects.create(pereval=pereval, track_path=file_path)
-#         # return Response({"status": 200, "message": "Файл трека загружен", "track_id": track_record.id}, status=status.HTTP_201_CREATED)
-#
-#         return Response({"status": 200, "message": "Файл трека загружен"}, status=status.HTTP_201_CREATED)
 
 
 class SubmitDataUpdateView(UpdateAPIView):
@@ -562,57 +509,6 @@ class DecisionPerevalView(APIView):
 
 
 
-# class ApprovePerevalView(APIView):
-#     """Подтверждение перевала (PUT /api/moderation/{id}/approve/)"""
-#
-#     @swagger_auto_schema(
-#         responses={
-#             200: "Перевал подтверждён",
-#             404: "Перевал не найден",
-#             400: "Перевал уже подтверждён или отклонён"
-#         }
-#     )
-#     def put(self, request, pk, *args, **kwargs):
-#         """Устанавливает статус `accepted`"""
-#         try:
-#             pereval = PerevalAdded.objects.get(pk=pk)
-#         except PerevalAdded.DoesNotExist:
-#             return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
-#
-#         if pereval.status != "pending":
-#             return Response({"state": 0, "message": "Перевал уже обработан"}, status=status.HTTP_400_BAD_REQUEST)
-#
-#         pereval.status = "accepted"
-#         pereval.save()
-#
-#         return Response({"state": 1, "message": "Перевал подтверждён"}, status=status.HTTP_200_OK)
-
-
-# class RejectPerevalView(APIView):
-#     """Отклонение перевала (PUT /api/moderation/{id}/reject/)"""
-#
-#     @swagger_auto_schema(
-#         responses={
-#             200: "Перевал отклонён",
-#             404: "Перевал не найден",
-#             400: "Перевал уже подтверждён или отклонён"
-#         }
-#     )
-#     def put(self, request, pk, *args, **kwargs):
-#         """Устанавливает статус `rejected`"""
-#         try:
-#             pereval = PerevalAdded.objects.get(pk=pk)
-#         except PerevalAdded.DoesNotExist:
-#             return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
-#
-#         if pereval.status != "pending":
-#             return Response({"state": 0, "message": "Перевал уже обработан"}, status=status.HTTP_400_BAD_REQUEST)
-#
-#         pereval.status = "rejected"
-#         pereval.save()
-#
-#         return Response({"state": 1, "message": "Перевал отклонён"}, status=status.HTTP_200_OK)
-#
 
 class SubmitPerevalForModerationView(APIView):
     """Отправка перевала на модерацию (PUT /api/passes/{id}/submit/)"""
