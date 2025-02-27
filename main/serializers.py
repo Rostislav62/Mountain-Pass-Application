@@ -157,10 +157,3 @@ class ApiSettingsSerializer(serializers.ModelSerializer):
 
 
 
-class PerevalUpdateSerializer(serializers.ModelSerializer):
-    """Сериализатор для обновления перевала (разрешены только указанные поля)"""
-
-    class Meta:
-        model = PerevalAdded
-        fields = ['beautyTitle', 'title', 'other_titles', 'coord', 'difficulties']
-        read_only_fields = []  # Здесь можно указать, какие поля запрещено менять

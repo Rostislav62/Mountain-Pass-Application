@@ -34,7 +34,6 @@ from main.permissions import IsSuperAdmin
 from main.serializers import PerevalUserSerializer
 from main.permissions import IsModerator
 from rest_framework.permissions import IsAuthenticated
-from main.serializers import PerevalUpdateSerializer
 
 
 # Настроим логгер
@@ -220,50 +219,33 @@ class UploadImageView(APIView):
         )
 
 
-class SubmitDataUpdateView(APIView):
-    """Позволяет обновлять данные перевала (Только если статус `new`)"""
+class SubmitDataUpdateView(UpdateAPIView):
+    """Редактирование данных о перевале, если статус new"""
 
-    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
+    queryset = PerevalAdded.objects.all()
+    serializer_class = SubmitDataSerializer
 
-    @swagger_auto_schema(
-        operation_description="📌 Обновление перевала (Только если статус 'new')",
-        request_body=PerevalUpdateSerializer,
-        responses={
-            200: "Перевал успешно обновлён",
-            403: "Нет прав на изменение",
-            404: "Перевал не найден",
-            400: "Ошибка в данных"
-        }
-    )
-    def patch(self, request, pk):
-        """Обновляет данные перевала, если статус `new` и пользователь имеет права"""
+    def patch(self, request, *args, **kwargs):
+        pereval = self.get_object()
 
-        try:
-            pereval = PerevalAdded.objects.get(pk=pk)
-        except PerevalAdded.DoesNotExist:
-            return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+        # 🔹 Проверяем, можно ли редактировать (статус должен быть "New")
+        if pereval.status.id != 1:  # ✅ Сравниваем ID, а не строку
+            return Response({"status": 400, "message": "Обновление запрещено: статус не new"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
-        # Проверяем, что статус перевала `new`, иначе запрет
-        if pereval.status.id != 1:
-            return Response(
-                {"state": 0, "message": f"Перевал уже отправлен или обработан (Текущий статус: {pereval.status.name})"},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        # 🔹 Удаляем `user` и `status` из обновляемых данных
+        mutable_data = request.data.copy()
+        mutable_data.pop("user", None)
+        mutable_data.pop("status", None)
 
-        # Проверяем, что пользователь — автор или администратор
-        if not request.user.is_superuser and pereval.user.email != request.user.email:
-            return Response({"state": 0, "message": "У вас нет прав на изменение этого перевала"},
-                            status=status.HTTP_403_FORBIDDEN)
-
-        # Десериализуем данные
-        serializer = PerevalUpdateSerializer(pereval, data=request.data, partial=True)
+        serializer = self.get_serializer(pereval, data=mutable_data, partial=True)
 
         if serializer.is_valid():
             serializer.save()
-            return Response({"state": 1, "message": "Перевал успешно обновлён"}, status=status.HTTP_200_OK)
+            return Response({"status": 200, "message": "Перевал успешно обновлён"}, status=status.HTTP_200_OK)
 
-        logger.warning(f"Ошибка валидации: {serializer.errors}")
-        return Response({"state": 0, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"status": 400, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class SubmitDataListView(ListAPIView):
     """Получение списка всех перевалов."""
