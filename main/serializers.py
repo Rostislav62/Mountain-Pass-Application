@@ -72,17 +72,12 @@ class PerevalDifficultySerializer(serializers.ModelSerializer):
 
 
 class PerevalUserSerializer(serializers.ModelSerializer):
-    logger.warning(f"❌ ШАГ 1.3: Вошли в PerevalUserSerializer ")
     class Meta:
-        logger.warning(f"❌ ШАГ 1.4: Вошли в class Meta: ")
         model = PerevalUser
-        logger.warning(f"❌ ШАГ 1.4: Вошли в class model = PerevalUser: ")
         fields = ['id', 'family_name', 'first_name', 'father_name', 'phone', 'email']
-        logger.warning(f"❌ ШАГ 1.4: Вошли в class fields = ['id', 'family_name', 'first_name', 'father_name', 'phone', 'email'] ")
 
 
 class SubmitDataSerializer(serializers.ModelSerializer):
-    logger.warning(f"❌ ШАГ 1.2: Вошли в SubmitDataSerializer ")
     user = PerevalUserSerializer()
     coord = CoordsSerializer()
     status = serializers.PrimaryKeyRelatedField(queryset=PerevalStatus.objects.all())  # 🔥 Связываем с PerevalStatus

@@ -35,9 +35,9 @@ from main.serializers import PerevalUserSerializer
 from main.permissions import IsModerator
 from rest_framework.permissions import IsAuthenticated
 
+
 # Настроим логгер
 logger = logging.getLogger(__name__)
-
 
 class SubmitDataView(APIView):
     """API для приёма и получения данных о перевале"""
@@ -53,9 +53,7 @@ class SubmitDataView(APIView):
         print("📥 ШАГ 1: Полученные данные:", request.data)
 
         try:
-            logger.warning(f"❌ ШАГ 1.0: Вошли в try")
             serializer = SubmitDataSerializer(data=request.data)
-            logger.warning(f"❌ ШАГ 1.1: Ошибка валидации: {serializer.errors}")
 
             if serializer.is_valid():
                 data = serializer.validated_data
@@ -107,6 +105,7 @@ class SubmitDataView(APIView):
     #     ],
     #     responses={200: SubmitDataSerializer(many=True)},  # 📌 Описывает успешный ответ
     # )
+
 
     def get(self, request):
         """📌 GET: Получает список перевалов пользователя по email"""
@@ -329,6 +328,7 @@ class SubmitDataDetailView(APIView):
             )
 
 
+
 class RegisterView(APIView):
     """Регистрация нового пользователя"""
 
@@ -339,7 +339,6 @@ class RegisterView(APIView):
     def post(self, request):
         """POST-запрос на создание нового пользователя"""
         serializer = PerevalUserSerializer(data=request.data)
-        logger.warning(f"❌ ШАГ 10: Ошибка валидации: {serializer.errors}")
         if serializer.is_valid():
             user = DatabaseService.add_user(
                 email=serializer.validated_data['email'],
@@ -509,6 +508,8 @@ class DeletePerevalPhotoView(APIView):
                         status=status.HTTP_403_FORBIDDEN)
 
 
+
+
 class ModerationListView(APIView):
     """Получение списка перевалов на модерацию (GET /api/moderation/)"""
 
@@ -555,8 +556,8 @@ class DecisionPerevalView(APIView):
 
         pereval.status = PerevalStatus.objects.get(id=status_id)
         pereval.save()
-        return Response({"state": 1, "message": f"Перевал обновлён до статуса ID {status_id}"},
-                        status=status.HTTP_200_OK)
+        return Response({"state": 1, "message": f"Перевал обновлён до статуса ID {status_id}"}, status=status.HTTP_200_OK)
+
 
 
 # class ApprovePerevalView(APIView):
