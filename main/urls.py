@@ -29,8 +29,8 @@ urlpatterns = [
     # Полное удаление перевала (DELETE) перенесено в submitData/
     path('submitData/<int:pk>/delete/', SubmitDataDeleteView.as_view(), name='submit-data-delete'),
 
-    # Добавляем маршрут обновления перевала
-    path('submitData/<int:pk>/update/', SubmitDataUpdateView.as_view(), name='submit-data-update'),
+    # # Добавляем маршрут обновления перевала
+    # path('submitData/<int:pk>/update/', SubmitDataUpdateView.as_view(), name='submit-data-update'),
 
     # список перевалов со статусом "pending".
     path('moderation/', ModerationListView.as_view(), name='moderation-list'),
