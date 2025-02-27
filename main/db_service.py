@@ -29,9 +29,9 @@ class DatabaseService:
         user = PerevalUser.objects.create(
             email=user_data["email"],
             phone=user_data["phone"],
-            fam=user_data["family_name"],
-            name=user_data["first_name"],
-            otc=user_data.get("father_name", "")
+            family_name=user_data["family_name"],
+            first_name=user_data["first_name"],
+            father_name=user_data.get("father_name", "")
         )
         logger.info(f"✅ ШАГ 3.4: Пользователь создан: {user}")
         return user

@@ -342,9 +342,9 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = DatabaseService.add_user(
                 email=serializer.validated_data['email'],
-                fam=serializer.validated_data['fam'],
-                name=serializer.validated_data['name'],
-                otc=serializer.validated_data.get('otc', ''),
+                family_name=serializer.validated_data['family_name'],
+                first_name=serializer.validated_data['first_name'],
+                father_name=serializer.validated_data.get('father_name', ''),
                 phone=serializer.validated_data['phone']
             )
             return Response({"message": "Пользователь успешно зарегистрирован", "user_id": user.id},
