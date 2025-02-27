@@ -74,7 +74,31 @@ class PerevalDifficultySerializer(serializers.ModelSerializer):
 class PerevalUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = PerevalUser
-        fields = ['id', 'family_name', 'first_name', 'father_name', 'phone', 'email']
+        fields = ["email", "phone", "fam", "name", "otc"]
+
+    def validate(self, data):
+        """
+        Проверяет, существует ли пользователь, и если да — использует его вместо создания нового.
+        """
+        email = data.get("email")
+        phone = data.get("phone")
+
+        # Проверяем, есть ли пользователь с таким email или телефоном
+        user = PerevalUser.objects.filter(email=email).first() or \
+               PerevalUser.objects.filter(phone=phone).first()
+
+        if user:
+            # Если пользователь найден, возвращаем его данные, а не создаём новый
+            return {
+                "email": user.email,
+                "phone": user.phone,
+                "fam": user.fam,
+                "name": user.name,
+                "otc": user.otc
+            }
+
+        # Если пользователя нет, создаём нового
+        return data
 
 
 class SubmitDataSerializer(serializers.ModelSerializer):
