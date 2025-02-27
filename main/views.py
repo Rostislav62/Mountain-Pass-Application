@@ -337,6 +337,7 @@ class RegisterView(APIView):
     def post(self, request):
         """POST-запрос на создание нового пользователя"""
         serializer = PerevalUserSerializer(data=request.data)
+        logger.warning(f"❌ ШАГ 10: Ошибка валидации: {serializer.errors}")
         if serializer.is_valid():
             user = DatabaseService.add_user(
                 email=serializer.validated_data['email'],
