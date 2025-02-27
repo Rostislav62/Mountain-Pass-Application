@@ -518,7 +518,9 @@ class ModerationListView(APIView):
     )
     def get(self, request, *args, **kwargs):
         """Возвращает список перевалов со статусом `pending`"""
-        perevals = PerevalAdded.objects.filter(status="pending")
+        PENDING_STATUS_ID = 2  # ✅ ID статуса "pending" в БД
+        perevals = PerevalAdded.objects.filter(status=PENDING_STATUS_ID)
+
         serializer = SubmitDataSerializer(perevals, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
