@@ -59,14 +59,8 @@ class SubmitDataView(APIView):
                 data = serializer.validated_data
                 print("✅ Валидированные данные:", data)  # ✅ Логируем после валидации
 
-                # Проверяем, есть ли уже такой пользователь
-                user_data = data["user"]
-                user, created = DatabaseService.get_or_create_user(
-                    email=user_data["email"],
-                    phone=user_data["phone"],
-                    defaults={"fam": user_data["family_name"], "name": user_data["first_name"],
-                              "otc": user_data.get("father_name", "")}
-                )
+                # Проверяем и создаем пользователя, если его нет
+                user = DatabaseService.add_user(data["user"])
 
                 # Сохраняем данные в БД
                 if not data.get("connect", False):

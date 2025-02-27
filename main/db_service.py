@@ -10,46 +10,24 @@ class DatabaseService:
     """Класс для работы с базой данных"""
 
     @staticmethod
-    def add_user(email, fam, name, otc, phone):
-        """
-        Получает пользователя по email или создаёт нового.
-
-        :param email: Email пользователя.
-        :param fam: Фамилия.
-        :param name: Имя.
-        :param otc: Отчество.
-        :param phone: Телефон.
-        :return: Объект пользователя.
-        """
-        try:
-            # Проверяем, есть ли уже пользователь с таким email
-            user = User.objects.get(email=email)
-            return user  # Если пользователь уже существует, просто возвращаем его
-
-        except ObjectDoesNotExist:
-            # Если пользователя нет – создаём нового
-            user = User.objects.create(email=email, fam=fam, name=name, otc=otc, phone=phone)
-            return user
-
-    def get_or_create_user(email, phone, user_data):
+    def add_user(user_data):
         """
         Ищет пользователя по email или телефону. Если находит — возвращает, иначе создаёт нового.
         """
-        user = PerevalUser.objects.filter(email=email).first() or PerevalUser.objects.filter(phone=phone).first()
+        user = PerevalUser.objects.filter(email=user_data["email"]).first() or \
+               PerevalUser.objects.filter(phone=user_data["phone"]).first()
 
-        if not user:
-            user = PerevalUser.objects.create(
-                email=email,
-                phone=phone,
-                fam=user_data["family_name"],
-                name=user_data["first_name"],
-                otc=user_data.get("father_name", "")
-            )
-            created = True
-        else:
-            created = False
+        if user:
+            return user  # Если пользователь найден, просто возвращаем его
 
-        return user, created
+        # Если пользователя нет – создаём нового
+        return PerevalUser.objects.create(
+            email=user_data["email"],
+            phone=user_data["phone"],
+            fam=user_data["family_name"],
+            name=user_data["first_name"],
+            otc=user_data.get("father_name", "")
+        )
 
     @staticmethod
     def add_coords(latitude, longitude, height):
