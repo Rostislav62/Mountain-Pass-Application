@@ -680,35 +680,6 @@ class SubmitPerevalForModerationView(APIView):
         )
 
 
-class GetPerevalForModerationView(APIView):
-    """Проверка текущего статуса перевала (GET /api/passes/{id}/status/)"""
-
-    @swagger_auto_schema(
-        responses={
-            200: "Статус перевала",
-            404: "Перевал не найден"
-        }
-    )
-    def get(self, request, pk, *args, **kwargs):
-        """
-        Получает статус перевала по ID.
-        Используется для диагностики.
-        """
-        try:
-            pereval = PerevalAdded.objects.get(pk=pk)
-        except PerevalAdded.DoesNotExist:
-            return Response(
-                {"state": 0, "message": "Перевал не найден"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        # Выводим текущий статус перевала
-        return Response(
-            {"state": 1, "message": f"Статус перевала: {pereval.status}"},
-            status=status.HTTP_200_OK
-        )
-
-
 class ApiSettingsView(RetrieveUpdateAPIView):
     """Управление настройками API (авторизация)"""
 

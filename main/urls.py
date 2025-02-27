@@ -38,9 +38,6 @@ urlpatterns = [
     # отправление перевала на модерацию (status = "pending").
     path('api/passes/<int:pk>/submit/', SubmitPerevalForModerationView.as_view(), name='submit-pereval'),
 
-    path('api/passes/<int:pk>/status/', SubmitPerevalForModerationView.as_view(), name='pereval-status'),
-
-
     # Добавляем маршруты, например:
     path('', include(router.urls)),  # Основные маршруты API
 ]
