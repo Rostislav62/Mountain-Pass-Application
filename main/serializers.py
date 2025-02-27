@@ -79,26 +79,19 @@ class PerevalUserSerializer(serializers.ModelSerializer):
         logger.warning(f"❌ ШАГ 1.4: Вошли в class model = PerevalUser: ")
         fields = ['id', 'family_name', 'first_name', 'father_name', 'phone', 'email']
 
+
 class SubmitDataSerializer(serializers.ModelSerializer):
     logger.warning(f"❌ ШАГ 1.2: Вошли в SubmitDataSerializer ")
-    # Вместо полного объекта user передаём только user_id
-    user = serializers.PrimaryKeyRelatedField(queryset=PerevalUser.objects.all())
     user = PerevalUserSerializer()
     coord = CoordsSerializer()
     status = serializers.PrimaryKeyRelatedField(queryset=PerevalStatus.objects.all())  # 🔥 Связываем с PerevalStatus
     difficulties = PerevalDifficultySerializer(many=True)
     images = PerevalImagesSerializer(many=True, required=True)
+
     class Meta:
         model = PerevalAdded
-        fields = ['user', 'beautyTitle', 'title', 'other_titles', 'connect', 'coord', 'status']
-
-    #
-    #
-    #
-    # class Meta:
-    #     model = PerevalAdded
-    #     fields = ['beautyTitle', 'title', 'other_titles', 'connect', 'add_time', 'user', 'coord', 'status',
-    #               'difficulties', 'images']
+        fields = ['beautyTitle', 'title', 'other_titles', 'connect', 'add_time', 'user', 'coord', 'status',
+                  'difficulties', 'images']
 
 
     def create(self, validated_data):
