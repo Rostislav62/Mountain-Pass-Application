@@ -54,6 +54,7 @@ class SubmitDataView(APIView):
 
         try:
             serializer = SubmitDataSerializer(data=request.data)
+            logger.warning(f"❌ ШАГ 1.1: Ошибка валидации: {serializer.errors}")
 
             if serializer.is_valid():
                 data = serializer.validated_data
