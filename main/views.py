@@ -284,6 +284,7 @@ class SubmitDataDetailView(APIView):
 
     def get(self, request, pk, *args, **kwargs):
         """
+        ✅ Получение информации о конкретном перевале по ID.
         ✅ Если перевал не найден, возвращаем кастомное сообщение.
         """
         try:
