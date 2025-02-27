@@ -72,11 +72,11 @@ class DatabaseService:
         user, created = PerevalUser.objects.get_or_create(email=user_email, defaults=user_data)
 
         # Если пользователь уже существовал – обновляем его данные
-        if not created:
-            for attr, value in user_data.items():
-                if value:  # Записываем только непустые значения
-                    setattr(user, attr, value)
-            user.save()
+        # if not created:
+        #     for attr, value in user_data.items():
+        #         if value:  # Записываем только непустые значения
+        #             setattr(user, attr, value)
+        #     user.save()
 
         # Создаём координаты перевала
         coord_data = data.get('coord', {})
