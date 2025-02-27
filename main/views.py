@@ -224,6 +224,7 @@ class SubmitDataUpdateView(UpdateAPIView):
 
     queryset = PerevalAdded.objects.all()
     serializer_class = SubmitDataSerializer
+    http_method_names = ['patch']  # ❗ Оставляем только PATCH, убираем PUT
 
     def patch(self, request, *args, **kwargs):
         pereval = self.get_object()
