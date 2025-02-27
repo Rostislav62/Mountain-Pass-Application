@@ -227,25 +227,46 @@ class SubmitDataUpdateView(UpdateAPIView):
     http_method_names = ['patch']  # ❗ Оставляем только PATCH, убираем PUT
 
     def patch(self, request, *args, **kwargs):
-        pereval = self.get_object()
+        pereval = self.get_object()  # 🔹 Получаем объект перевала по ID
 
         # 🔹 Проверяем, можно ли редактировать (статус должен быть "New")
         if pereval.status.id != 1:  # ✅ Сравниваем ID, а не строку
-            return Response({"status": 400, "message": "Обновление запрещено: статус не new"},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"status": 400, "message": "Обновление запрещено: статус не new"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # 🔹 Удаляем `user` и `status` из обновляемых данных
+        # 🔹 Получаем данные из запроса и оставляем только нужные поля
         mutable_data = request.data.copy()
-        mutable_data.pop("user", None)
-        mutable_data.pop("status", None)
 
-        serializer = self.get_serializer(pereval, data=mutable_data, partial=True)
+        # Оставляем только разрешенные поля
+        allowed_fields = ["beautyTitle", "title", "other_titles", "coord", "difficulties"]
+
+        # 🔹 Убираем все другие поля, кроме разрешенных
+        filtered_data = {key: mutable_data[key] for key in allowed_fields if key in mutable_data}
+
+        # 🔹 Проверяем, что в `coord` переданы только корректные данные (latitude, longitude, height)
+        if "coord" in filtered_data:
+            coord_fields = ["latitude", "longitude", "height"]
+            filtered_data["coord"] = {k: v for k, v in filtered_data["coord"].items() if k in coord_fields}
+
+        # 🔹 Проверяем, что в `difficulties` передан корректный формат
+        if "difficulties" in filtered_data and isinstance(filtered_data["difficulties"], list):
+            for diff in filtered_data["difficulties"]:
+                diff_keys = ["season", "difficulty"]
+                for key in list(diff.keys()):
+                    if key not in diff_keys:
+                        del diff[key]  # Удаляем лишние поля из вложенного словаря
+
+        # 🔹 Применяем обновления только с указанными полями
+        serializer = self.get_serializer(pereval, data=filtered_data, partial=True)
 
         if serializer.is_valid():
-            serializer.save()
+            serializer.save()  # 🔹 Сохраняем обновленные данные
             return Response({"status": 200, "message": "Перевал успешно обновлён"}, status=status.HTTP_200_OK)
 
         return Response({"status": 400, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class SubmitDataListView(ListAPIView):
