@@ -626,55 +626,86 @@ class SubmitPerevalForModerationView(APIView):
     )
     def put(self, request, pk, *args, **kwargs):
         """
-        Меняет статус перевала с `new` на `pending`.
-        Если перевал уже отправлен (pending) → сообщение об этом.
-        Если перевал обработан (accepted/rejected) → сообщение, что он уже принят или отклонен.
+        Меняет статус перевала с `new` (ID=1) на `pending` (ID=2).
+        Если перевал уже `pending` (ID=2) → сообщение, что он уже отправлен.
+        Если перевал `accepted` (ID=3) или `rejected` (ID=4) → сообщение, что он обработан.
         """
         try:
-            # 🔍 Пытаемся найти перевал по его ID (pk)
+            # 🔍 Ищем перевал по ID
             pereval = PerevalAdded.objects.get(pk=pk)
         except PerevalAdded.DoesNotExist:
-            # ❌ Если перевал не найден, отправляем ошибку 404
+            # ❌ Если перевал не найден, возвращаем 404
             return Response(
                 {"state": 0, "message": "Перевал не найден"},
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # 🔄 Проверяем текущий статус перевала
-        if pereval.status == "new":
-            # ✅ Если статус "new", то меняем его на "pending" (отправляем на модерацию)
-            pereval.status = "pending"
+        # 🆔 Получаем ID текущего статуса перевала
+        status_id = pereval.status.id
+
+        # ✅ Если статус "New" (ID = 1), меняем его на "Pending" (ID = 2)
+        if status_id == 1:
+            pereval.status_id = 2
             pereval.save()
             return Response(
                 {"state": 1, "message": "Перевал отправлен на модерацию"},
                 status=status.HTTP_200_OK
             )
 
-        elif pereval.status == "pending":
-            # ⚠ Если статус уже "pending", то сообщаем, что перевал уже отправлен
+        # ⚠ Если статус уже "Pending" (ID = 2)
+        elif status_id == 2:
             return Response(
                 {"state": 0, "message": "Перевал уже отправлен на проверку"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        elif pereval.status == "accepted":
-            # ✅ Если перевал уже принят, сообщаем об этом
+        # ✅ Если статус "Accepted" (ID = 3)
+        elif status_id == 3:
             return Response(
                 {"state": 0, "message": "Перевал уже был принят модератором"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        elif pereval.status == "rejected":
-            # ❌ Если перевал был отклонён, сообщаем об этом
+        # ❌ Если статус "Rejected" (ID = 4)
+        elif status_id == 4:
             return Response(
                 {"state": 0, "message": "Перевал был отклонен модератором"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 🔄 На случай, если вдруг появятся новые статусы в будущем
+        # 🔄 На случай, если появятся новые статусы
         return Response(
-            {"state": 0, "message": f"Неизвестный статус перевала: {pereval.status}"},
+            {"state": 0, "message": f"Неизвестный статус перевала: {status_id}"},
             status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class GetPerevalForModerationView(APIView):
+    """Проверка текущего статуса перевала (GET /api/passes/{id}/status/)"""
+
+    @swagger_auto_schema(
+        responses={
+            200: "Статус перевала",
+            404: "Перевал не найден"
+        }
+    )
+    def get(self, request, pk, *args, **kwargs):
+        """
+        Получает статус перевала по ID.
+        Используется для диагностики.
+        """
+        try:
+            pereval = PerevalAdded.objects.get(pk=pk)
+        except PerevalAdded.DoesNotExist:
+            return Response(
+                {"state": 0, "message": "Перевал не найден"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Выводим текущий статус перевала
+        return Response(
+            {"state": 1, "message": f"Статус перевала: {pereval.status}"},
+            status=status.HTTP_200_OK
         )
 
 
