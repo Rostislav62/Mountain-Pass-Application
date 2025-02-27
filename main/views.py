@@ -53,6 +53,7 @@ class SubmitDataView(APIView):
         print("📥 ШАГ 1: Полученные данные:", request.data)
 
         try:
+            logger.warning(f"❌ ШАГ 1.0: Вошли в try")
             serializer = SubmitDataSerializer(data=request.data)
             logger.warning(f"❌ ШАГ 1.1: Ошибка валидации: {serializer.errors}")
 
