@@ -56,8 +56,8 @@ class PerevalUser(models.Model):
     family_name = models.CharField(max_length=255)  # Фамилия
     first_name = models.CharField(max_length=255)  # Имя
     father_name = models.CharField(max_length=255, blank=True, null=True, default="")  # Отчество (может быть пустым)
-    phone = models.CharField(max_length=20, unique=True, blank=False, null=False)  # Телефон (уникальный)
-    email = models.EmailField(unique=True)  # Email (уникальный)
+    phone = models.CharField(max_length=20, unique=False, blank=False, null=False)  # Телефон (уникальный)
+    email = models.EmailField(unique=False, blank=False, null=False)  # Email (уникальный)
     created_at = models.DateTimeField(auto_now_add=True)  # Дата создания (автоматическая)
 
     def __str__(self):
