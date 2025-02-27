@@ -31,4 +31,10 @@ class IsAuthenticatedAndSuperAdmin(BasePermission):
         return request.user.is_authenticated and request.user.is_superuser
 
 
+class IsOwnerOrAdmin(BasePermission):
+    """
+    Разрешает доступ только владельцу объекта или администратору.
+    """
 
+    def has_object_permission(self, request, view, obj):
+        return request.user.is_superuser or obj.user.email == request.user.email

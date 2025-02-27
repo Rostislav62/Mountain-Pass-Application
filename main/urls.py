@@ -3,7 +3,7 @@
 from django.urls import path, include  # Импортируем path для маршрутов
 from main.views import (SubmitDataListView, UploadImageView, SubmitDataView, SubmitDataDetailView,
                         SubmitDataDeleteView, DeletePerevalPhotoView, PerevalPhotosListView,
-                        ModerationListView, DecisionPerevalView, SubmitPerevalForModerationView)
+                        ModerationListView, DecisionPerevalView, SubmitPerevalForModerationView, SubmitDataUpdateView)
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -28,6 +28,10 @@ urlpatterns = [
 
     # Полное удаление перевала (DELETE) перенесено в submitData/
     path('submitData/<int:pk>/delete/', SubmitDataDeleteView.as_view(), name='submit-data-delete'),
+
+    # Добавляем маршрут обновления перевала
+    path('submitData/<int:pk>/update/', SubmitDataUpdateView.as_view(), name='submit-data-update'),
+
 
     # список перевалов со статусом "pending".
     path('moderation/', ModerationListView.as_view(), name='moderation-list'),
