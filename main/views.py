@@ -59,14 +59,23 @@ class SubmitDataView(APIView):
                 data = serializer.validated_data
                 print("✅ Валидированные данные:", data)  # ✅ Логируем после валидации
 
+                # Проверяем, есть ли уже такой пользователь
+                user_data = data["user"]
+                user, created = DatabaseService.get_or_create_user(
+                    email=user_data["email"],
+                    phone=user_data["phone"],
+                    defaults={"fam": user_data["family_name"], "name": user_data["first_name"],
+                              "otc": user_data.get("father_name", "")}
+                )
+
                 # Сохраняем данные в БД
                 if not data.get("connect", False):
                     return Response(
                         {"status": 400, "message": "Нет связи. Перевал нельзя отправить."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-
-                pereval = DatabaseService.add_pereval(user_email=data['user']['email'], data=data)
+                # Создаём новый перевал и привязываем к найденному пользователю
+                pereval = DatabaseService.add_pereval(user_email=user.email, data=data)
 
                 # Возвращаем ID созданного объекта
                 return Response({"status": 200, "message": None, "id": pereval.id}, status=status.HTTP_201_CREATED)

@@ -32,6 +32,16 @@ class DatabaseService:
             return user
 
     @staticmethod
+    def get_or_create_user(email, phone, defaults):
+        """Находит пользователя или создаёт нового."""
+        user, created = PerevalUser.objects.get_or_create(
+            email=email,
+            phone=phone,
+            defaults=defaults
+        )
+        return user, created
+
+    @staticmethod
     def add_coords(latitude, longitude, height):
         """Добавляет координаты перевала"""
         coords = Coords.objects.create(latitude=latitude, longitude=longitude, height=height)
@@ -171,7 +181,6 @@ class DatabaseService:
 
         # Получаем ID статуса из данных запроса (по умолчанию "New" = id 1)
         status_id = data.get('status', 1)
-
 
         # Создаём перевал с объектом `PerevalStatus`
         pereval = PerevalAdded.objects.create(
