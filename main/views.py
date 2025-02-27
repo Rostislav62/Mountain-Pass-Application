@@ -35,9 +35,9 @@ from main.serializers import PerevalUserSerializer
 from main.permissions import IsModerator
 from rest_framework.permissions import IsAuthenticated
 
-
 # Настроим логгер
 logger = logging.getLogger(__name__)
+
 
 class SubmitDataView(APIView):
     """API для приёма и получения данных о перевале"""
@@ -49,51 +49,63 @@ class SubmitDataView(APIView):
     )
     def post(self, request):
         """📌 POST: Создаёт новый перевал"""
-        print("📥 Полученные данные:", request.data)  # ✅ Логируем входные данные
+        logger.info("🚀 ШАГ 1: Получен POST-запрос на /submitData/")
+        print("📥 ШАГ 1: Полученные данные:", request.data)
 
         try:
             serializer = SubmitDataSerializer(data=request.data)
 
-            # Проверяем, что данные валидны
             if serializer.is_valid():
                 data = serializer.validated_data
-                print("✅ Валидированные данные:", data)  # ✅ Логируем после валидации
+                logger.info("✅ ШАГ 2: Данные успешно валидированы")
+                print("✅ ШАГ 2: Валидированные данные:", data)
 
-                # Проверяем и создаем пользователя, если его нет
+                # 🔹 Создаём или получаем пользователя
+                logger.info("🔍 ШАГ 3: Вызов `add_user()` для создания/поиска пользователя")
                 user = DatabaseService.add_user(data["user"])
 
-                # Сохраняем данные в БД
+                logger.info(f"👤 ШАГ 4: Пользователь найден/создан: {user}")
+                print(f"👤 ШАГ 4: Пользователь найден/создан: {user}")
+
+                # 🔹 Проверка условия `connect`
                 if not data.get("connect", False):
+                    logger.warning("❌ ШАГ 5: Нет связи, перевал не будет отправлен")
                     return Response(
                         {"status": 400, "message": "Нет связи. Перевал нельзя отправить."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-                # Создаём новый перевал и привязываем к найденному пользователю
+
+                # 🔹 Создаём перевал
+                logger.info(f"🏔️ ШАГ 6: Вызов `add_pereval()` для создания перевала (user_id={user.id})")
                 pereval = DatabaseService.add_pereval(user_email=user.email, data=data)
 
-                # Возвращаем ID созданного объекта
+                logger.info(f"✅ ШАГ 7: Перевал успешно создан, ID: {pereval.id}")
+                print(f"✅ ШАГ 7: Перевал успешно создан, ID: {pereval.id}")
+
                 return Response({"status": 200, "message": None, "id": pereval.id}, status=status.HTTP_201_CREATED)
 
-            # Если данные невалидны – возвращаем ошибку
-            print("❌ Ошибка валидации:", serializer.errors)  # ✅ Логируем ошибки сериализации
+            logger.warning(f"❌ ШАГ 8: Ошибка валидации: {serializer.errors}")
             return Response({"status": 400, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
-            traceback.print_exc()  # Выводим полную трассировку ошибки в консоль
+            logger.error(f"⚠ ШАГ 9: Ошибка сервера: {str(e)}")
+            traceback.print_exc()
             return Response({"status": 500, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                "user__email",
-                openapi.IN_QUERY,
-                description="📌 Email пользователя для фильтрации перевалов",
-                type=openapi.TYPE_STRING,
-                required=True,
-            )
-        ],
-        responses={200: SubmitDataSerializer(many=True)},  # 📌 Описывает успешный ответ
-    )
+    #
+    # @swagger_auto_schema(
+    #     manual_parameters=[
+    #         openapi.Parameter(
+    #             "user__email",
+    #             openapi.IN_QUERY,
+    #             description="📌 Email пользователя для фильтрации перевалов",
+    #             type=openapi.TYPE_STRING,
+    #             required=True,
+    #         )
+    #     ],
+    #     responses={200: SubmitDataSerializer(many=True)},  # 📌 Описывает успешный ответ
+    # )
+
     def get(self, request):
         """📌 GET: Получает список перевалов пользователя по email"""
         email = request.query_params.get("user__email")
@@ -315,7 +327,6 @@ class SubmitDataDetailView(APIView):
             )
 
 
-
 class RegisterView(APIView):
     """Регистрация нового пользователя"""
 
@@ -495,8 +506,6 @@ class DeletePerevalPhotoView(APIView):
                         status=status.HTTP_403_FORBIDDEN)
 
 
-
-
 class ModerationListView(APIView):
     """Получение списка перевалов на модерацию (GET /api/moderation/)"""
 
@@ -543,8 +552,8 @@ class DecisionPerevalView(APIView):
 
         pereval.status = PerevalStatus.objects.get(id=status_id)
         pereval.save()
-        return Response({"state": 1, "message": f"Перевал обновлён до статуса ID {status_id}"}, status=status.HTTP_200_OK)
-
+        return Response({"state": 1, "message": f"Перевал обновлён до статуса ID {status_id}"},
+                        status=status.HTTP_200_OK)
 
 
 # class ApprovePerevalView(APIView):

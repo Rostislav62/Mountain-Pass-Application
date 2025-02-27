@@ -1,9 +1,11 @@
 #  /Mountain Pass Application/main/db_service.py
 
 from main.models import User, PerevalAdded, PerevalImages, Coords, WeatherInfo, PerevalUser, PerevalStatus
-# from main.models import PerevalGpsTracks, PerevalHistory, RelatedObjects
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist  # Для обработки ошибок, если перевала нет
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DatabaseService:
@@ -11,23 +13,28 @@ class DatabaseService:
 
     @staticmethod
     def add_user(user_data):
-        """
-        Ищет пользователя по email или телефону. Если находит — возвращает, иначе создаёт нового.
-        """
+        """🔍 Ищет пользователя по email или телефону. Если находит — возвращает, иначе создаёт нового."""
+
+        logger.info(f"🔍 ШАГ 3.1: Поиск пользователя по email={user_data['email']} или phone={user_data['phone']}")
+        print(f"🔍 ШАГ 3.1: Поиск пользователя по email={user_data['email']} или phone={user_data['phone']}")
+
         user = PerevalUser.objects.filter(email=user_data["email"]).first() or \
                PerevalUser.objects.filter(phone=user_data["phone"]).first()
 
         if user:
-            return user  # Если пользователь найден, просто возвращаем его
+            logger.info(f"✅ ШАГ 3.2: Пользователь найден: {user}")
+            return user
 
-        # Если пользователя нет – создаём нового
-        return PerevalUser.objects.create(
+        logger.info("👤 ШАГ 3.3: Пользователь не найден, создаём нового")
+        user = PerevalUser.objects.create(
             email=user_data["email"],
             phone=user_data["phone"],
             fam=user_data["family_name"],
             name=user_data["first_name"],
             otc=user_data.get("father_name", "")
         )
+        logger.info(f"✅ ШАГ 3.4: Пользователь создан: {user}")
+        return user
 
     @staticmethod
     def add_coords(latitude, longitude, height):
@@ -63,21 +70,22 @@ class DatabaseService:
     @staticmethod
     @transaction.atomic
     def add_pereval(user_email, data):
-        """
-        Добавляет новый перевал в БД.
-        """
+        """🏔️ Создаёт новый перевал в БД."""
 
-        # Получаем данные пользователя
+        logger.info(f"🏔️ ШАГ 6.1: Начало создания перевала для пользователя {user_email}")
+        print(f"🏔️ ШАГ 6.1: Начало создания перевала для пользователя {user_email}")
+
+        # 🔹 Получаем пользователя
         user = PerevalUser.objects.get(email=user_email)
+        logger.info(f"👤 ШАГ 6.2: Найден пользователь (user_id={user.id})")
+        print(f"👤 ШАГ 6.2: Найден пользователь (user_id={user.id})")
 
-        # Создаём координаты перевала
+        # 🔹 Создаём координаты
         coord_data = data.get('coord', {})
         coord = Coords.objects.create(**coord_data)
+        logger.info(f"📍 ШАГ 6.3: Координаты созданы")
 
-        # Получаем ID статуса из данных запроса (по умолчанию "New" = id 1)
-        status_id = data.get('status', 1)
-
-        # Создаём перевал с объектом `PerevalStatus`
+        # 🔹 Создаём перевал
         pereval = PerevalAdded.objects.create(
             user_id=user.id,
             coord=coord,
@@ -85,16 +93,10 @@ class DatabaseService:
             title=data.get('title', ''),
             other_titles=data.get('other_titles', ''),
             connect=data.get('connect', ''),
-            status=status_id,
+            status=data.get('status', 1),
         )
-
-        images_data = data.get('images', [])
-        for image_data in images_data:
-            PerevalImages.objects.create(
-                pereval=pereval,
-                data=image_data.get("data", ""),
-                title=image_data.get("title", "")
-            )
+        logger.info(f"✅ ШАГ 7: Перевал успешно создан, ID: {pereval.id}")
+        print(f"✅ ШАГ 7: Перевал успешно создан, ID: {pereval.id}")
 
         return pereval
 
