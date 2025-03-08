@@ -89,6 +89,7 @@ class PerevalAdded(models.Model):
     def __str__(self):
         return self.title
 
+
 class PerevalDifficulty(models.Model):
     """Связь перевалов с уровнем сложности и сезоном"""
 
@@ -149,3 +150,13 @@ class ApiSettings(models.Model):
 
     def __str__(self):
         return f"API Auth Required: {self.require_authentication}"
+
+
+class EmailConfirmationToken(models.Model):
+    """Модель для хранения кода подтверждения email"""
+    user = models.OneToOneField(PerevalUser, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Код для {self.user.email}: {self.code}"

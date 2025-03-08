@@ -9,7 +9,7 @@ import traceback
 import os
 import logging
 from main.db_service import DatabaseService
-from main.models import PerevalImages, PerevalStatus
+from main.models import PerevalImages, PerevalStatus, PerevalUser, EmailConfirmationToken
 from django.conf import settings
 from rest_framework.views import APIView
 from django.core.files.storage import default_storage
@@ -17,7 +17,8 @@ from django.core.files.base import ContentFile
 from rest_framework.generics import ListAPIView  # Импортируем базовый класс для списков
 from rest_framework import status  # Для указания HTTP-статусов
 from main.models import PerevalAdded  # Импортируем модель Перевала
-from main.serializers import SubmitDataSerializer  # Подключаем сериализатор
+from main.serializers import SubmitDataSerializer, PerevalUserCheckSerializer, \
+    PerevalUserUpdateSerializer  # Подключаем сериализатор
 from drf_yasg.utils import swagger_auto_schema  # 📌 Импортируем Swagger-декоратор Swagger-документация
 from drf_yasg import openapi  # 📌 Импортируем для описания параметров
 from rest_framework.parsers import MultiPartParser, FormParser  # 📌 Добавляем поддержку загрузки файлов
@@ -34,10 +35,13 @@ from main.permissions import IsSuperAdmin
 from main.serializers import PerevalUserSerializer
 from main.permissions import IsModerator
 from rest_framework.permissions import IsAuthenticated
+from main.utils import send_confirmation_email
+from .serializers import PerevalAddedSerializer
 
 
 # Настроим логгер
 logger = logging.getLogger(__name__)
+
 
 class SubmitDataView(APIView):
     """API для приёма и получения данных о перевале"""
@@ -91,19 +95,6 @@ class SubmitDataView(APIView):
             logger.error(f"⚠ ШАГ 9: Ошибка сервера: {str(e)}")
             traceback.print_exc()
             return Response({"status": 500, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    # def get(self, request):
-    #     """📌 GET: Получает список перевалов пользователя по email"""
-    #     email = request.query_params.get("user__email")
-    #
-    #     if not email:
-    #         return Response({"message": "Требуется email"}, status=status.HTTP_400_BAD_REQUEST)
-    #
-    #     perevals = PerevalAdded.objects.filter(user__email=email)
-    #     serializer = SubmitDataSerializer(perevals, many=True)
-    #
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 
 class UploadImageView(APIView):
@@ -219,54 +210,118 @@ class UploadImageView(APIView):
         )
 
 
-class SubmitDataUpdateView(UpdateAPIView):
-    """Редактирование данных о перевале, если статус new"""
+class SubmitDataUpdateView(APIView):
+    """Редактирование данных о перевале, если статус new и пользователь является автором"""
 
-    queryset = PerevalAdded.objects.all()
-    serializer_class = SubmitDataSerializer
-    http_method_names = ['patch']  # ❗ Оставляем только PATCH, убираем PUT
+    http_method_names = ['patch']  # Оставляем только PATCH
 
-    def patch(self, request, *args, **kwargs):
-        pereval = self.get_object()  # 🔹 Получаем объект перевала по ID
-
-        # 🔹 Проверяем, можно ли редактировать (статус должен быть "New")
-        if pereval.status.id != 1:  # ✅ Сравниваем ID, а не строку
+    @swagger_auto_schema(
+        operation_description="Обновляет перевал, если email совпадает и статус new",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['email'],  # Email обязателен
+            properties={
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description='Email пользователя'),
+                'beautyTitle': openapi.Schema(type=openapi.TYPE_STRING, description='Название горного массива'),
+                'title': openapi.Schema(type=openapi.TYPE_STRING, description='Название перевала'),
+                'other_titles': openapi.Schema(type=openapi.TYPE_STRING, description='Другие названия'),
+                'coord': openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'latitude': openapi.Schema(type=openapi.TYPE_NUMBER, description='Широта'),
+                        'longitude': openapi.Schema(type=openapi.TYPE_NUMBER, description='Долгота'),
+                        'height': openapi.Schema(type=openapi.TYPE_NUMBER, description='Высота')
+                    }
+                ),
+                'difficulties': openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'season': openapi.Schema(type=openapi.TYPE_INTEGER, description='Сезон'),
+                            'difficulty': openapi.Schema(type=openapi.TYPE_INTEGER, description='Сложность')
+                        }
+                    )
+                )
+            }
+        ),
+        responses={
+            200: openapi.Response('Перевал успешно обновлён', openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'state': openapi.Schema(type=openapi.TYPE_INTEGER, example=1),
+                    'message': openapi.Schema(type=openapi.TYPE_STRING, example='Перевал успешно обновлён')
+                }
+            )),
+            400: 'Ошибка валидации или статус не new',
+            403: 'Нет прав на редактирование',
+            404: 'Перевал не найден'
+        }
+    )
+    def patch(self, request, pk, *args, **kwargs):
+        """Обновляет перевал, если email совпадает и статус new"""
+        # Получаем объект перевала по ID
+        try:
+            pereval = PerevalAdded.objects.get(pk=pk)
+        except PerevalAdded.DoesNotExist:
             return Response(
-                {"status": 400, "message": "Обновление запрещено: статус не new"},
+                {"state": 0, "message": "Перевал не найден"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Проверяем наличие email в теле запроса
+        email = request.data.get("email")
+        if not email:
+            return Response(
+                {"state": 0, "message": "Поле email обязательно"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 🔹 Получаем данные из запроса и оставляем только нужные поля
+        # Проверяем, является ли пользователь автором перевала
+        if pereval.user.email != email:
+            return Response(
+                {"state": 0, "message": "У вас нет прав на редактирование этого перевала"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Проверяем, что статус new (id = 1)
+        if pereval.status.id != 1:
+            return Response(
+                {"state": 0, "message": "Обновление запрещено: статус не new"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Получаем данные из запроса и фильтруем только разрешённые поля
         mutable_data = request.data.copy()
-
-        # Оставляем только разрешенные поля
         allowed_fields = ["beautyTitle", "title", "other_titles", "coord", "difficulties"]
-
-        # 🔹 Убираем все другие поля, кроме разрешенных
         filtered_data = {key: mutable_data[key] for key in allowed_fields if key in mutable_data}
 
-        # 🔹 Проверяем, что в `coord` переданы только корректные данные (latitude, longitude, height)
+        # Фильтруем координаты
         if "coord" in filtered_data:
             coord_fields = ["latitude", "longitude", "height"]
             filtered_data["coord"] = {k: v for k, v in filtered_data["coord"].items() if k in coord_fields}
 
-        # 🔹 Проверяем, что в `difficulties` передан корректный формат
+        # Фильтруем сложности
         if "difficulties" in filtered_data and isinstance(filtered_data["difficulties"], list):
             for diff in filtered_data["difficulties"]:
                 diff_keys = ["season", "difficulty"]
                 for key in list(diff.keys()):
                     if key not in diff_keys:
-                        del diff[key]  # Удаляем лишние поля из вложенного словаря
+                        del diff[key]
 
-        # 🔹 Применяем обновления только с указанными полями
-        serializer = self.get_serializer(pereval, data=filtered_data, partial=True)
-
+        # Сериализуем и сохраняем данные
+        serializer = SubmitDataSerializer(pereval, data=filtered_data, partial=True)
         if serializer.is_valid():
-            serializer.save()  # 🔹 Сохраняем обновленные данные
-            return Response({"status": 200, "message": "Перевал успешно обновлён"}, status=status.HTTP_200_OK)
+            serializer.save()
+            return Response(
+                {"state": 1, "message": "Перевал успешно обновлён"},
+                status=status.HTTP_200_OK
+            )
 
-        return Response({"status": 400, "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
+        return Response(
+            {"state": 0, "message": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class SubmitDataListView(ListAPIView):
@@ -298,7 +353,6 @@ class SubmitDataDetailView(APIView):
             )
 
 
-
 class RegisterView(APIView):
     """Регистрация нового пользователя"""
 
@@ -310,13 +364,15 @@ class RegisterView(APIView):
         """POST-запрос на создание нового пользователя"""
         serializer = PerevalUserSerializer(data=request.data)
         if serializer.is_valid():
-            user = DatabaseService.add_user(
-                email=serializer.validated_data['email'],
-                family_name=serializer.validated_data['family_name'],
-                first_name=serializer.validated_data['first_name'],
-                father_name=serializer.validated_data.get('father_name', ''),
-                phone=serializer.validated_data['phone']
-            )
+            user_data = {
+                "email": serializer.validated_data["email"],
+                "family_name": serializer.validated_data["family_name"],
+                "first_name": serializer.validated_data["first_name"],
+                "father_name": serializer.validated_data.get("father_name", ""),
+                "phone": serializer.validated_data["phone"]
+            }
+
+            user = DatabaseService.add_user(user_data)
             return Response({"message": "Пользователь успешно зарегистрирован", "user_id": user.id},
                             status=status.HTTP_201_CREATED)
 
@@ -371,54 +427,74 @@ class SubmitDataReplaceView(UpdateAPIView):
 class SubmitDataDeleteView(APIView):
     """Удаление перевала (DELETE)"""
 
-    permission_classes = [IsAuthenticated]  # Удалять могут только авторизованные пользователи
-
     @swagger_auto_schema(
+        operation_description="Удаляет перевал, если email совпадает и статус new",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['email'],
+            properties={
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description='Email пользователя')
+            }
+        ),
         responses={
-            200: "Перевал удалён",
-            400: "Удаление запрещено: статус не `new`",
-            403: "Нет прав на удаление",
-            404: "Перевал не найден"
+            200: openapi.Response('Перевал удалён', openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'state': openapi.Schema(type=openapi.TYPE_INTEGER, example=1),
+                    'message': openapi.Schema(type=openapi.TYPE_STRING, example='Перевал удалён')
+                }
+            )),
+            400: 'Удаление запрещено: статус не new',
+            403: 'Нет прав на удаление',
+            404: 'Перевал не найден'
         }
     )
     def delete(self, request, pk, *args, **kwargs):
-        """
-        Удаляет перевал, если статус `new`
-        ✅ Админ (`IsSuperAdmin`) может удалять всё.
-        ✅ Модератор (`IsModerator`) может удалять, только если статус `new`.
-        ✅ Обычный пользователь может удалить свой перевал, пока он в статусе `new`.
-        """
+        """Удаляет перевал, если email совпадает и статус new"""
+        logger.info(f"🚀 DELETE /submitData/{pk}/ вызван")
 
+        # Получаем перевал по ID
         try:
             pereval = PerevalAdded.objects.get(pk=pk)
         except PerevalAdded.DoesNotExist:
-            return Response({"state": 0, "message": "Перевал не найден"}, status=status.HTTP_404_NOT_FOUND)
+            logger.warning(f"❌ Перевал {pk} не найден")
+            return Response(
+                {"state": 0, "message": "Перевал не найден"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-        # ✅ Администратор может удалить любой перевал без ограничений
-        if request.user.is_superuser:
-            pereval.delete()
-            return Response({"state": 1, "message": "Перевал удалён администратором"}, status=status.HTTP_200_OK)
+        # Проверяем наличие email в теле запроса
+        email = request.data.get("email")
+        if not email:
+            logger.warning("❌ Поле email отсутствует в запросе")
+            return Response(
+                {"state": 0, "message": "Поле email обязательно"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # ✅ Проверяем, является ли пользователь автором перевала
-        if pereval.user.email == request.user.email:
-            if pereval.status.id == 1:  # Статус "new"
-                pereval.delete()
-                return Response({"state": 1, "message": "Перевал удалён пользователем"}, status=status.HTTP_200_OK)
-            else:
-                return Response({"state": 0, "message": "Вы не можете удалить перевал с текущим статусом"},
-                                status=status.HTTP_400_BAD_REQUEST)
+        # Проверяем, является ли пользователь автором перевала
+        if pereval.user.email != email:
+            logger.warning(f"⛔ У пользователя {email} нет прав на удаление перевала {pk}")
+            return Response(
+                {"state": 0, "message": "У вас нет прав на удаление этого перевала"},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
-        # ✅ Проверяем, является ли пользователь модератором
-        if hasattr(request.user, "moderator_group"):  # Проверяем, является ли пользователь модератором
-            if pereval.status.id == 1:  # Статус "new"
-                pereval.delete()
-                return Response({"state": 1, "message": "Перевал удалён модератором"}, status=status.HTTP_200_OK)
-            else:
-                return Response({"state": 0, "message": "Модератор может удалить только перевалы со статусом `new`"},
-                                status=status.HTTP_400_BAD_REQUEST)
+        # Проверяем, что статус new (id = 1)
+        if pereval.status.id != 1:
+            logger.warning(f"❌ Удаление запрещено: статус перевала {pk} не new")
+            return Response(
+                {"state": 0, "message": "Удаление запрещено: статус не new"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        return Response({"state": 0, "message": "У вас нет прав на удаление этого перевала"},
-                        status=status.HTTP_403_FORBIDDEN)
+        # Удаляем перевал
+        pereval.delete()
+        logger.info(f"✅ Перевал {pk} удалён пользователем {email}")
+        return Response(
+            {"state": 1, "message": "Перевал удалён"},
+            status=status.HTTP_200_OK
+        )
 
 
 class PerevalPhotosListView(APIView):
@@ -447,37 +523,74 @@ class PerevalPhotosListView(APIView):
 class DeletePerevalPhotoView(APIView):
     """Удаление фотографии перевала"""
 
-    permission_classes = [IsAuthenticated]
-
     @swagger_auto_schema(
-        operation_description="📌 Удаление фотографии перевала",
+        operation_description="📌 Удаление фотографии перевала, если email совпадает и статус new",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['email'],
+            properties={
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description='Email пользователя')
+            }
+        ),
         responses={
-            200: "Фотография удалена",
-            403: "Нет прав на удаление",
-            404: "Фотография не найдена"
+            200: openapi.Response('Фотография удалена', openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'state': openapi.Schema(type=openapi.TYPE_INTEGER, example=1),
+                    'message': openapi.Schema(type=openapi.TYPE_STRING, example='Фотография удалена')
+                }
+            )),
+            400: 'Удаление запрещено: статус не new',
+            403: 'Нет прав на удаление',
+            404: 'Фотография не найдена'
         }
     )
     def delete(self, request, photo_id, *args, **kwargs):
-        """Удаляет фотографию, если у пользователя есть права"""
+        """Удаляет фотографию, если email совпадает и статус new"""
         logger.info(f"🚀 DELETE /uploadImage/{photo_id}/ вызван")
 
+        # Получаем фотографию по ID
         try:
             photo = PerevalImages.objects.get(pk=photo_id)
         except PerevalImages.DoesNotExist:
             logger.warning(f"❌ Фотография {photo_id} не найдена")
-            return Response({"state": 0, "message": "Фотография не найдена"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"state": 0, "message": "Фотография не найдена"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-        # ✅ Проверяем, является ли пользователь автором перевала
-        if request.user.is_superuser or photo.pereval.user.email == request.user.email:
-            photo.delete()
-            logger.info(f"✅ Фотография {photo_id} удалена пользователем {request.user.email}")
-            return Response({"state": 1, "message": "Фотография удалена"}, status=status.HTTP_200_OK)
+        # Проверяем наличие email в теле запроса
+        email = request.data.get("email")
+        if not email:
+            logger.warning("❌ Поле email отсутствует в запросе")
+            return Response(
+                {"state": 0, "message": "Поле email обязательно"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        logger.warning(f"⛔ У пользователя {request.user.email} нет прав на удаление {photo_id}")
-        return Response({"state": 0, "message": "У вас нет прав на удаление этой фотографии"},
-                        status=status.HTTP_403_FORBIDDEN)
+        # Проверяем, является ли пользователь автором перевала
+        if photo.pereval.user.email != email:
+            logger.warning(f"⛔ У пользователя {email} нет прав на удаление {photo_id}")
+            return Response(
+                {"state": 0, "message": "У вас нет прав на удаление этой фотографии"},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
+        # Проверяем, что статус перевала new (id = 1)
+        if photo.pereval.status.id != 1:
+            logger.warning(f"❌ Удаление запрещено: статус перевала не new для фото {photo_id}")
+            return Response(
+                {"state": 0, "message": "Удаление запрещено: статус перевала не new"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        # Удаляем фотографию
+        photo.delete()
+        logger.info(f"✅ Фотография {photo_id} удалена пользователем {email}")
+        return Response(
+            {"state": 1, "message": "Фотография удалена"},
+            status=status.HTTP_200_OK
+        )
 
 
 class ModerationListView(APIView):
@@ -528,9 +641,8 @@ class DecisionPerevalView(APIView):
 
         pereval.status = PerevalStatus.objects.get(id=status_id)
         pereval.save()
-        return Response({"state": 1, "message": f"Перевал обновлён до статуса ID {status_id}"}, status=status.HTTP_200_OK)
-
-
+        return Response({"state": 1, "message": f"Перевал обновлён до статуса ID {status_id}"},
+                        status=status.HTTP_200_OK)
 
 
 class SubmitPerevalForModerationView(APIView):
@@ -651,3 +763,103 @@ class ModeratorDeleteView(DestroyAPIView):
             return Response({"message": "Модератор удалён"}, status=status.HTTP_200_OK)
         except ModeratorGroup.DoesNotExist:
             return Response({"error": "Модератор не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class UserDetailView(APIView):
+    """Получение данных пользователя по email"""
+
+    @swagger_auto_schema(
+        operation_description="📌 Получение данных пользователя по email",
+        responses={200: PerevalUserCheckSerializer, 404: "Пользователь не найден"}
+    )
+    def get(self, request, email):
+        """Возвращает информацию о пользователе по email"""
+        user = PerevalUser.objects.filter(email=email).first()
+        if not user:
+            return Response({"status": 404, "message": "Пользователь не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = PerevalUserCheckSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class RequestUserUpdateView(APIView):
+    """Запрос на изменение данных (отправка кода на email)"""
+
+    def post(self, request, email):
+        """Отправляет код подтверждения на email"""
+        user = PerevalUser.objects.filter(email=email).first()
+        if not user:
+            return Response({"status": 404, "message": "Пользователь не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        send_confirmation_email(user)
+        return Response({"status": 200, "message": "Код подтверждения отправлен на email"}, status=status.HTTP_200_OK)
+
+
+class ConfirmUserUpdateView(APIView):
+    """Обновление данных пользователя после подтверждения кода"""
+
+    def patch(self, request, email):
+        """Обновляет данные пользователя, если код подтверждения верный"""
+
+        # 🔹 ШАГ 1: Ищем пользователя по email
+        user = PerevalUser.objects.filter(email=email).first()
+        if not user:
+            return Response(
+                {"status": 404, "message": "Пользователь не найден"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # 🔹 ШАГ 2: Проверяем, передан ли код подтверждения
+        code = request.data.get("code")
+        if not code:
+            return Response(
+                {"status": 400, "message": "Код подтверждения обязателен"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 🔹 ШАГ 3: Ищем код подтверждения в базе
+        token = EmailConfirmationToken.objects.filter(user=user, code=code).first()
+        if not token:
+            return Response(
+                {"status": 400, "message": "Неверный код подтверждения"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 🔹 ШАГ 4: Обновляем данные пользователя
+        serializer = PerevalUserUpdateSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+
+            # ✅ ШАГ 5: Удаляем использованный код подтверждения
+            token.delete()
+
+            return Response(
+                {"status": 200, "message": "Данные успешно обновлены"},
+                status=status.HTTP_200_OK
+            )
+
+        # 🔹 ШАГ 6: Если данные некорректны, возвращаем ошибки
+        return Response(
+            {"status": 400, "message": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class UserSubmitsView(APIView):
+    """Получение всех перевалов конкретного пользователя по email"""
+
+    def get(self, request, email):
+        """
+        Возвращает список перевалов пользователя по его email.
+        Если перевалов нет, сообщает, что записей не найдено.
+        """
+        user = PerevalUser.objects.filter(email=email).first()
+        if not user:
+            return Response({"status": 404, "message": "Пользователь не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+        submits = PerevalAdded.objects.filter(user=user)
+        if not submits.exists():
+            return Response({"status": 200, "message": "У пользователя пока нет записанных перевалов"}, status=status.HTTP_200_OK)
+
+        serializer = PerevalAddedSerializer(submits, many=True)
+        return Response({"status": 200, "data": serializer.data}, status=status.HTTP_200_OK)

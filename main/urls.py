@@ -3,7 +3,8 @@
 from django.urls import path, include  # Импортируем path для маршрутов
 from main.views import (SubmitDataListView, UploadImageView, SubmitDataView, SubmitDataDetailView,
                         SubmitDataDeleteView, DeletePerevalPhotoView, PerevalPhotosListView,
-                        ModerationListView, DecisionPerevalView, SubmitPerevalForModerationView, SubmitDataUpdateView)
+                        ModerationListView, DecisionPerevalView, SubmitPerevalForModerationView, SubmitDataUpdateView,
+                        )
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -40,6 +41,7 @@ urlpatterns = [
 
     # отправление перевала на модерацию (status = "pending").
     path('api/passes/<int:pk>/submit/', SubmitPerevalForModerationView.as_view(), name='submit-pereval'),
+
 
     # Добавляем маршруты, например:
     path('', include(router.urls)),  # Основные маршруты API
