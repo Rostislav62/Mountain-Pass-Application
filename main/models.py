@@ -17,7 +17,7 @@ class ModeratorGroup(models.Model):
 class DifficultyLevel(models.Model):
     """Описание сложности перевала"""
     code = models.CharField(max_length=2, unique=True)  # Например, '1A', '3B'
-    description = models.CharField(max_length=255, unique=True)  # Полное описание сложности
+    description = models.CharField(max_length=255)  # Полное описание сложности
 
     def __str__(self):
         return self.description
