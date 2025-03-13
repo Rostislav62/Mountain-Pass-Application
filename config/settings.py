@@ -295,12 +295,14 @@ CORS_ALLOW_METHODS = ["GET", "POST", "PATCH", "DELETE", "OPTIONS"]  # Разре
 CORS_ALLOW_HEADERS = ["content-type", "authorization", "x-csrftoken"]  # Разрешённые заголовки
 #
 # # 🔹 Разрешаем только `localhost:3000` (для продакшена лучше так)
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-# ]
-#
-#
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",                          # Для локальной разработки
+    "http://127.0.0.1:3000",                         # Для локальной разработки
+    "https://alp-pass-42g2bc11p-rostislavs-projects-ee2efba1.vercel.app"  # Для Vercel
+]
+
+
 # # 🔹 Разрешаем заголовки CORS
 # CORS_ALLOW_HEADERS = [
 #     "content-type",
