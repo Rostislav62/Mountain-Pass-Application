@@ -1,4 +1,131 @@
-﻿Mountain Pass Application
+# Mountain Pass Application
+
+## Overview
+
+### Problem
+The Russian Sports Tourism Federation (FSTR) relies on manual processing for mountain pass applications, causing delays of several months.
+
+### Solution
+A Django-based REST API to streamline registration, editing, and moderation of mountain pass data, reducing processing time to days.
+
+### Impact
+Enhances efficiency for tourists and FSTR staff, improving application handling and user experience.
+
+## About the Project
+Mountain Pass Application is a REST API developed for the FSTR to manage mountain pass data. Users can submit, edit, and track pass applications, while moderators and admins handle approvals. The system features a role-based access model and comprehensive Swagger/OpenAPI documentation for easy integration.
+
+This project showcases my skills in building scalable backend systems with Django, REST APIs, and secure authentication.
+
+## Features
+- **CRUD Operations**: Create, read, update, and delete pass records (restricted by moderation status).
+- **Role-Based Access**:
+  - Guests: Read-only access.
+  - Users: Submit and edit passes before moderation.
+  - Moderators: Approve or reject passes.
+  - Admins: Full access, including deletion.
+- **JWT Authentication**: Secure access with access/refresh tokens.
+- **Moderation Workflow**: Track pass status (new, pending, approved, rejected).
+- **API Documentation**: Swagger UI and Redoc for seamless integration.
+- **Database**: SQLite (local) or PostgreSQL (production).
+
+## How It Works
+1. Users authenticate via JWT (`POST /api/auth/login/`) to obtain tokens.
+2. Users submit pass data (`POST /submitData/`) with details like coordinates, images, and difficulty levels.
+3. Moderators review pending passes (`GET /moderation/`) and update statuses (`PUT /moderation/{id}/decision/`).
+4. Users track pass status (`GET /submitData/{id}/info/`).
+5. Admins manage all data with full access.
+
+## Technologies
+- **Python 3.10**: Core language.
+- **Django 4.x**: Web framework.
+- **Django REST Framework**: API development.
+- **JWT (djangorestframework-simplejwt)**: Authentication.
+- **SQLite/PostgreSQL**: Database storage.
+- **Swagger/OpenAPI**: API documentation.
+- **Git**: Version control.
+
+## Installation
+1. Clone the repository:
+   git clone https://github.com/Rostislav62/Mountain-Pass-Application.git
+   cd Mountain-Pass-Application
+
+2. Install dependencies:
+pip install -r requirements.txt
+
+3. Apply migrations and create a superuser:
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+
+4. Run the server:
+python manage.py runserver
+
+The API will be available at http://127.0.0.1:8000/.
+
+## Usage
+. Authentication: Obtain a JWT token via:
+curl -X POST http://127.0.0.1:8000/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "your_password"}'
+
+Use the token in the Authorization header: Bearer <jwt_access_token>.
+
+. Key Endpoints:
+ . List passes: GET /submitData/list/
+ . Create pass: POST /submitData/
+ . Update pass: PATCH /submitData/{id}/update/
+ . Delete pass: DELETE /submitData/{id}/delete/
+ . Get pass details: GET /submitData/{id}/info/
+ . Update moderation status: PUT /moderation/{id}/decision/
+ . List pending passes: GET /moderation/
+
+. API Documentation:
+ . Local: Swagger or Redoc
+ . Hosted: Swagger
+
+## Example API Request
+Create a new pass:
+
+curl -X POST https://rostislav62.pythonanywhere.com/submitData/ \
+  -H "Authorization: Bearer <jwt_access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "beautyTitle": "Sunny Pass",
+    "title": "Sunny Pass",
+    "other_titles": "Sunlit Pass",
+    "connect": true,
+    "user": {
+      "family_name": "Ivanov",
+      "first_name": "Alexey",
+      "father_name": "Sergeevich",
+      "phone": "+79160000001",
+      "email": "user1@example.com"
+    },
+    "coord": {
+      "latitude": 43.123456,
+      "longitude": 76.987654,
+      "height": 2500
+    },
+    "status": 1,
+    "difficulties": [{"season": 1, "difficulty": 3}],
+    "images": [{"data": "image_url_1.jpg", "title": "Pass View"}]
+  }'
+
+## Demo
+Explore the live API: https://rostislav62.pythonanywhere.com/swagger/
+
+## Author
+Rostislav — AI agent and backend developer. This project is part of my portfolio, showcasing expertise in REST API design, authentication, and database management.
+
+## License
+MIT License
+
+
+
+
+
+ 
+ Mountain Pass Application
 Описание проекта
 Mountain Pass Application представляет собой REST API для регистрации и просмотра информации о горных перевалах. Проект позволяет пользователям добавлять данные о перевалах, редактировать их (при условии, что перевал еще не отправлен на модерацию) и отслеживать статус модерации. Система предназначена для сокращения времени обработки заявок с нескольких месяцев до нескольких дней, что упрощает работу как туристов, так и сотрудников ФСТР.
 
