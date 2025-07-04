@@ -149,19 +149,6 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 
 
 # Database
-# Для PostgreSQL
-#
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'mountain_pass_db',
-#         'USER': 'postgres',
-#         'PASSWORD': '1',
-#         'HOST': 'localhost',
-#         'PORT': 5432,
-#     }
-# }
-
 # # Для PostgreSQL (раскомментировано)
 # DATABASES = {
 #     'default': {
@@ -174,26 +161,27 @@ YANDEX_MAPS_API_KEY = os.getenv("YANDEX_MAPS_API_KEY")
 #     }
 # }
 
-# Для Railway
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         default=os.getenv("DATABASE_URL"),
-#         conn_max_age=600,
-#         ssl_require=True  # Обязательно для Railway
-#     )
-# }
 
 # Для MySQL
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME', 'mountain_pass'),
-        'USER': os.getenv('DB_USER', 'root'),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '3306'),
+if os.getenv('USE_MYSQL', 'False') == 'True':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME', 'mountain_pass'),
+            'USER': os.getenv('DB_USER', 'root'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '3306'),
+        }
     }
-}
+# Для SQLite3
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'mountain_pass.db',
+        }
+    }
 
 
 def get_api_permissions():
@@ -288,18 +276,18 @@ SWAGGER_SETTINGS = {
 # }
 
 
-
 # CORS настройки
-CORS_ALLOW_ALL_ORIGINS = False  # Отключаем для точного контроля
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_METHODS = ["GET", "POST", "PATCH", "DELETE", "OPTIONS"]
-CORS_ALLOW_HEADERS = ["content-type", "authorization", "x-csrftoken"]
+CORS_ALLOW_ALL_ORIGINS = False  # Запрещаем все источники (для деплоя)
+CORS_ALLOW_CREDENTIALS = True   # Разрешаем передачу авторизационных данных (если потребуется)
+CORS_ALLOW_METHODS = ["GET", "POST", "PATCH", "DELETE", "OPTIONS"]  # Разрешённые методы
+CORS_ALLOW_HEADERS = ["content-type", "authorization", "x-csrftoken"]  # Разрешённые заголовки
+
+# 🔹 Разрешаем только `localhost:3000` (для продакшена лучше так)
 CORS_ALLOWED_ORIGINS = [
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+CORS_ORIGIN_REGEX_WHITELIST = [
+    r'^https://[a-zA-Z0-9-]+-rostislavs-projects-ee2efba1\.vercel\.app$',
 ]
 
-# Разрешаем все поддомены Vercel для твоего проекта
-CORS_ORIGIN_REGEX_WHITELIST = [
-  r"^https://.*-rostislavs-projects-ee2efba1\.vercel\.app$",
-]

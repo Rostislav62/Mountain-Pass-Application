@@ -1,110 +1,193 @@
-# 🏔️ Mountain Pass Application
 
-**Mountain Pass Application** – это REST API для регистрации и просмотра информации о горных перевалах.  
-Проект позволяет пользователям добавлять данные о перевалах, редактировать их, просматривать статусы модерации.
+# Mountain Pass Application
 
-## 🚀 Функционал API
+## Description
+Mountain Pass Application is a REST API designed for managing mountain pass data for the Russian Sports Tourism Federation (FSTR).  
+The system allows tourists to submit applications for passes, and enables moderators and administrators to process, moderate, and manage these applications efficiently.
 
-✅ Регистрация перевалов  
-✅ Редактирование перевалов (если статус `new`)  
-✅ Просмотр статусов модерации  
-✅ Получение списка всех отправленных пользователем перевалов  
-✅ Поддержка Swagger-документации  
+## Problem
+FSTR previously processed mountain pass applications manually, leading to delays of several months and inefficiencies for both tourists and staff.
+
+## Solution
+This project provides a Django REST API with JWT authentication to automate submission, review, and moderation of mountain pass data.  
+The API includes secure access, role-based permissions, and full Swagger/ReDoc documentation for easy integration.
+
+## Technologies
+- Python 3.12
+- Django 4.x
+- Django REST Framework
+- djangorestframework-simplejwt (JWT authentication)
+- Swagger / ReDoc (API documentation)
+- SQLite (local) / MySQL (production)
+
+## Result
+Reduced application processing time from several months to just a few days.  
+Simplified data management for both tourists and FSTR staff.
 
 ---
 
-## 🛠️ **Как развернуть локально**
-### 🔹 **1. Клонировать репозиторий**
+## How to Use
+
+### Run the server
+1️⃣ Clone the repository:
 ```bash
-git clone https://github.com/your-username/mountain-pass-app.git
-cd mountain-pass-app
+git clone https://github.com/Rostislav62/Mountain-Pass-Application.git
+cd Mountain-Pass-Application
+```
 
+2️⃣ Create and activate a virtual environment:
+```bash
+python3.12 -m venv venv
+source venv/bin/activate
+```
 
-Документация API
-✅ Swagger UI:
-🔗 https://mountain-pass-application-production.up.railway.app/swagger/
+3️⃣ Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-✅ ReDoc:
-🔗 https://mountain-pass-application-production.up.railway.app/redoc/
+4️⃣ Apply migrations and create a superuser:
+```bash
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+```
 
+5️⃣ Start the server:
+```bash
+python manage.py runserver
+```
+Access points:
+- Swagger: http://127.0.0.1:8000/swagger/
+- ReDoc: http://127.0.0.1:8000/redoc/
 
-Примеры API-запросов
-🔹 1. Создание нового перевала (POST /api/submitData/)
-📍 URL: https://mountain-pass-application-production.up.railway.app/api/submitData/
-📥 Тело запроса (JSON):
-{
-    "beautyTitle": "пер. ",
-    "title": "Пхия",
-    "other_titles": "Триев",
-    "connect": "",
-    "add_time": "2025-02-17T12:00:00Z",
-    "user": {
-        "email": "test@example.com",
-        "fam": "Иванов",
-        "name": "Пётр",
-        "otc": "Александрович",
-        "phone": "+79999999999"
-    },
-    "coord": {
-        "latitude": "45.3842",
-        "longitude": "7.1525",
-        "height": "1200"
-    },
-    "difficulties": [],
-    "images": []
-}
-📤 Ответ (JSON):
-{
-    "status": 200,
-    "message": null,
-    "id": 1
-}
+---
 
-🔹 2. Получение списка перевалов пользователя (GET /api/submitData/?user__email=)
-📍 URL: https://mountain-pass-application-production.up.railway.app/api/submitData/?user__email=test@example.com
-📤 Ответ (JSON):
-[
+## API interfaces and example endpoints
+### User roles
+- **Guest:** read-only access
+- **User:** can submit passes
+- **Moderator:** can review, approve, or reject passes
+- **Admin:** full access
+
+### Main API endpoints
+
+- List passes:
+GET /submitData/list/
+Example response:
+```json
     {
-        "beautyTitle": "пер. ",
-        "title": "Пхия",
-        "other_titles": "Триев",
-        "connect": "",
-        "add_time": "2025-02-18T12:33:19.985902Z",
-        "user": {
-            "id": 1,
-            "fam": "Иванов",
-            "name": "Пётр",
-            "phone": "+79999999999",
-            "otc": "Александрович"
-        },
-        "coord": {
-            "id": 1,
-            "latitude": "45.384200",
-            "longitude": "7.152500",
-            "height": 1200
-        },
-        "status": "new",
-        "difficulties": [],
-        "images": []
+      "beautyTitle": "Ледяной путь",
+      "title": "Перевал Ледяной",
+      "other_titles": "Ледяной перевал",
+      "connect": true,
+      "add_time": "2025-02-26T20:21:33.766892Z",
+      "user": {
+        "id": 14,
+        "family_name": "Сидоров",
+        "first_name": "Максим",
+        "father_name": "Владимирович",
+        "phone": "+79160000003",
+        "email": "user3@example.com"
+      },
+      "coord": {
+        "id": 11,
+        "latitude": 42.876543,
+        "longitude": 75.123456,
+        "height": 3000
+      },
+      "status": 1,
+      "difficulties": [],
+      "images": [
+        {
+          "id": 7,
+          "data": "image_url_3.jpg",
+          "title": "Вечерний перевал"
+        }
+      ]
     }
-]
+```
 
-🔹 3. Редактирование перевала (PATCH /api/submitData/<id>/)
-📍 URL: https://mountain-pass-application-production.up.railway.app/api/submitData/1/
-📥 Тело запроса (JSON):
-{
-    "title": "Новый Пхия",
-    "connect": "Долина реки Ингуш"
-}
+- Add a new pass:
+POST /submitData/
+```json
+    {
+      "beautyTitle": "Горный проход",
+      "title": "Перевал Солнечный",
+      "other_titles": "Солнечный перевал",
+      "connect": true,
+      "user": {
+        "family_name": "Иванов",
+        "first_name": "Алексей",
+        "father_name": "Сергеевич",
+        "phone": "+79160000001",
+        "email": "user1@example.com"
+      },
+      "coord": {
+        "latitude": 43.123456,
+        "longitude": 76.987654,
+        "height": 2500
+      },
+      "status": 1,
+      "difficulties": [
+        {
+          "season": 1,
+          "difficulty": 3
+        }
+      ],
+      "images": [
+        {
+          "data": "image_url_1.jpg",
+          "title": "Вид с перевала"
+        }
+      ]
+    }
+```
 
-📤 Ответ (JSON):
-{
-    "state": 1,
-    "message": "Данные успешно обновлены"
-}
+- Update pass:
+PATCH /submitData/{id}/update/
+```json
 
-✨ Контакты
-Разработчик:
-📧 Email: test@example.com
-🔗 GitHub: https://github.com/your-username/mountain-pass-app
+    {
+      "beautyTitle": "Горный проход",
+      "title": "Перевал Солнечный",
+      "other_titles": "Солнечный перевал",
+      "coord": {
+        "latitude": 43.123456,
+        "longitude": 76.987654,
+        "height": 2500
+      },
+      "difficulties": [
+        {
+          "season": 1,
+          "difficulty": 3
+        }
+      ]
+    }
+```
+- Delete pass:
+DELETE /submitData/{id}/delete/
+✅ Admin can delete anything
+✅ Moderator can delete if status is new
+✅ User can delete their own pass if status is new
 
+- Get pass info:
+GET /submitData/{id}/info/
+
+- Update moderation status:
+PUT /moderation/{id}/decision/
+```json
+    {
+      "status_id": 3
+    }
+```
+3 – Approved
+4 – Rejected
+
+- List passes with pending status::
+GET /moderation/
+
+
+## License
+MIT License  
+© 2025 Rostislav

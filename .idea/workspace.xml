@@ -5,22 +5,61 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a1a4b818-4875-4a69-9556-0bd326933e56" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Mountain Pass Application.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Mountain Pass Application.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Procfile" beforeDir="false" afterPath="$PROJECT_DIR$/Procfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/1.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/2.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/3.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CJM (customer journey map).xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Procfile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/asgi.py" beforeDir="false" afterPath="$PROJECT_DIR$/config/asgi.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/config/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/config/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/wsgi.py" beforeDir="false" afterPath="$PROJECT_DIR$/config/wsgi.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/create_superuser.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/apps.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/apps.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/db_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/db_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/management/commands/fill_difficulty_and_seasons.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/management/commands/fill_difficulty_and_seasons.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/migrations/0001_initial.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/migrations/0001_initial.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/migrations/0002_remove_perevalhistory_pereval_and_more.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/migrations/0003_remove_perevaladded_level_autumn_and_more.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/migrations/0004_alter_perevalimages_pereval.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/migrations/0005_remove_perevalimages_image_path_perevalimages_data_and_more.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/permissions.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/permissions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/serializers.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/services/google_maps.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/services/google_maps.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/services/openweather.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/services/openweather.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/services/strava.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/services/strava.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/services/yandex_maps.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/services/yandex_maps.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/signals.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/signals.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/tests.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/tests/test_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/tests/test_api.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/tests/test_db_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/tests/test_db_service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pytest.ini" beforeDir="false" afterPath="$PROJECT_DIR$/pytest.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/manage.py" beforeDir="false" afterPath="$PROJECT_DIR$/manage.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/pereval_tracks/fells_loop.gpx" beforeDir="false" afterPath="$PROJECT_DIR$/media/pereval_tracks/fells_loop.gpx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pytest.ini" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/staticfiles/drf-yasg/redoc-old/redoc.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/staticfiles/drf-yasg/redoc-old/redoc.min.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/~$ Подробный план реализации новых задач.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/~WRL2604.tmp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Замечания к структуре базы данных.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Команды для запуска тестов.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Отчёт по выполнению проекта.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Техническое задание на проект Mountain Pass Application.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/план реализации.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ Подробный план реализации новых задач.docx" beforePathEscaped="$PROJECT_DIR$/📌 Подробный план реализации новых задач.docx" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,7 +76,6 @@
   &quot;associatedIndex&quot;: 8
 }</component>
   <component name="ProjectId" id="2slhaCbhg7EWu4Ma3eAfMzDwYlx" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -46,13 +84,16 @@
   &quot;keyToString&quot;: {
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/ro/Projects/MountainPassApplication_Local&quot;
   }
 }</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-c69650fc56ca-d3b881c8e49f-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-233.15619.17" />
+        <option value="bundled-python-sdk-598b0484d0b5-e2d783800521-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-251.26927.74" />
       </set>
     </attachedChunks>
   </component>

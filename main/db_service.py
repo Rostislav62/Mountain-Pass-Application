@@ -1,35 +1,40 @@
 #  /Mountain Pass Application/main/db_service.py
 
-from main.models import User, PerevalAdded, PerevalImages, Coords, WeatherInfo
-# from main.models import PerevalGpsTracks, PerevalHistory, RelatedObjects
+from main.models import User, PerevalAdded, PerevalImages, Coords, PerevalUser, PerevalStatus
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist  # Для обработки ошибок, если перевала нет
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DatabaseService:
     """Класс для работы с базой данных"""
 
     @staticmethod
-    def add_user(email, fam, name, otc, phone):
-        """
-        Получает пользователя по email или создаёт нового.
+    def add_user(user_data):
+        """🔍 Ищет пользователя по email или телефону. Если находит — возвращает, иначе создаёт нового."""
 
-        :param email: Email пользователя.
-        :param fam: Фамилия.
-        :param name: Имя.
-        :param otc: Отчество.
-        :param phone: Телефон.
-        :return: Объект пользователя.
-        """
-        try:
-            # Проверяем, есть ли уже пользователь с таким email
-            user = User.objects.get(email=email)
-            return user  # Если пользователь уже существует, просто возвращаем его
+        logger.info(f"🔍 ШАГ 3.1: Поиск пользователя по email={user_data['email']} или phone={user_data['phone']}")
+        print(f"🔍 ШАГ 3.1: Поиск пользователя по email={user_data['email']} или phone={user_data['phone']}")
 
-        except ObjectDoesNotExist:
-            # Если пользователя нет – создаём нового
-            user = User.objects.create(email=email, fam=fam, name=name, otc=otc, phone=phone)
+        user = PerevalUser.objects.filter(email=user_data["email"]).first() or \
+               PerevalUser.objects.filter(phone=user_data["phone"]).first()
+
+        if user:
+            logger.info(f"✅ ШАГ 3.2: Пользователь найден: {user}")
             return user
+
+        logger.info("👤 ШАГ 3.3: Пользователь не найден, создаём нового")
+        user = PerevalUser.objects.create(
+            email=user_data["email"],
+            phone=user_data["phone"],
+            family_name=user_data["family_name"],
+            first_name=user_data["first_name"],
+            father_name=user_data.get("father_name", "")
+        )
+        logger.info(f"✅ ШАГ 3.4: Пользователь создан: {user}")
+        return user
 
     @staticmethod
     def add_coords(latitude, longitude, height):
@@ -61,127 +66,47 @@ class DatabaseService:
             # Если перевал с указанным ID не найден, выбрасываем ошибку
             raise ValueError(f"Перевал с ID {pereval_id} не найден в базе данных")
 
-    # @staticmethod
-    # def add_gps_track(pereval_id, track_url):
-    #     """
-    #     Добавляет GPS-трек (GPX/KML) для указанного перевала.
-    #
-    #     :param pereval_id: ID перевала, к которому привязываем GPS-трек.
-    #     :param track_url: Ссылка (путь) на файл GPS-трека.
-    #     :return: Объект GPS-трека или ошибка, если перевал не найден.
-    #     """
-    #
-    #     try:
-    #         # Пытаемся найти перевал в базе данных по ID
-    #         pereval = PerevalAdded.objects.get(id=pereval_id)
-    #
-    #         # Создаём запись в таблице PerevalGpsTracks, привязывая к найденному перевалу
-    #         gps_track = PerevalGpsTracks.objects.create(pereval=pereval, track_path=track_url)
-    #
-    #         # Возвращаем созданный объект GPS-трека
-    #         return gps_track
-    #
-    #     except ObjectDoesNotExist:
-    #         # Если перевал с указанным ID не найден, выбрасываем ошибку
-    # #         raise ValueError(f"Перевал с ID {pereval_id} не найден в базе данных")
-    #
-    # @staticmethod
-    # def add_pereval_history(user_email, pereval_id, pass_date, comments=None):
-    #     """
-    #     Добавляет запись о прохождении перевала.
-    #
-    #     :param user_email: Email пользователя, совершившего прохождение.
-    #     :param pereval_id: ID перевала, который был пройден.
-    #     :param pass_date: Дата прохождения перевала.
-    #     :param comments: Дополнительные комментарии (необязательно).
-    #     :return: Объект PerevalHistory или ошибка, если пользователь или перевал не найдены.
-    #     """
-    #
-    #     try:
-    #         # Пытаемся найти пользователя по email
-    #         user = User.objects.get(email=user_email)
-    #
-    #         # Пытаемся найти перевал по ID
-    #         pereval = PerevalAdded.objects.get(id=pereval_id)
-    #
-    #         # Создаём запись о прохождении перевала
-    #         history_entry = PerevalHistory.objects.create(
-    #             user=user,
-    #             pereval=pereval,
-    #             pass_date=pass_date,
-    #             comments=comments
-    #         )
-    #
-    #         # Возвращаем созданный объект истории прохождений
-    #         return history_entry
-    #
-    #     except ObjectDoesNotExist as e:
-    #         # Если пользователь или перевал не найдены, выбрасываем ошибку
-    #         raise ValueError(f"Ошибка: {str(e)}")
-
-    #
-    # @staticmethod
-    # def add_related_objects(pereval_id, related_name, related_type):
-    #     """
-    #     Добавляет связанный объект (гора, хребет и т. д.) для указанного перевала.
-    #
-    #     :param pereval_id: ID перевала, к которому привязываем объект.
-    #     :param related_name: Название связанного объекта.
-    #     :param related_type: Тип объекта ('mountain', 'ridge', 'other').
-    #     :return: Объект RelatedObjects или ошибка, если перевал не найден.
-    #     """
-    #
-    #     try:
-    #         # Проверяем, существует ли перевал с таким ID
-    #         pereval = PerevalAdded.objects.get(id=pereval_id)
-    #
-    #         # Создаём запись о связанном объекте
-    #         related_object = RelatedObjects.objects.create(
-    #             pereval=pereval,
-    #             related_name=related_name,
-    #             related_type=related_type
-    #         )
-    #
-    #         return related_object
-    #
-    #     except ObjectDoesNotExist:
-    #         raise ValueError(f"Перевал с ID {pereval_id} не найден в базе данных")
 
     @staticmethod
     @transaction.atomic
     def add_pereval(user_email, data):
-        """
-        Добавляет новый перевал в БД.
-        """
+        logger.info(f"🏔️ ШАГ 6.1: Начало создания перевала для пользователя {user_email}")
+        print(f"🏔️ ШАГ 6.1: Начало создания перевала для пользователя {user_email}")
 
-        # Получаем данные пользователя
-        user_data = data.get('user', {})
-        user, _ = User.objects.get_or_create(email=user_email, defaults=user_data)
+        user = PerevalUser.objects.get(email=user_email)
+        logger.info(f"👤 ШАГ 6.2: Найден пользователь (user_id={user.id})")
+        print(f"👤 ШАГ 6.2: Найден пользователь (user_id={user.id})")
 
-        # Создаём координаты перевала
         coord_data = data.get('coord', {})
         coord = Coords.objects.create(**coord_data)
+        logger.info(f"📍 ШАГ 6.3: Координаты созданы")
 
-        # Создаём запись перевала
+        difficulties_data = data.get('difficulties', [])
+
         pereval = PerevalAdded.objects.create(
-            user=user,
+            user_id=user.id,
             coord=coord,
             beautyTitle=data.get('beautyTitle', ''),
             title=data.get('title', ''),
             other_titles=data.get('other_titles', ''),
-            connect=data.get('connect', ''),
-            status='new',
+            connect=data.get('connect', False),
+            status=data.get('status', 1),
+            route_description=data.get('route_description', '')
         )
+        logger.info(f"✅ ШАГ 7: Перевал успешно создан, ID: {pereval.id}")
+        print(f"✅ ШАГ 7: Перевал успешно создан, ID: {pereval.id}")
 
-        images_data = data.get('images', [])
-        for image_data in images_data:
-            PerevalImages.objects.create(
+        from main.models import PerevalDifficulty
+        for diff in difficulties_data:
+            PerevalDifficulty.objects.create(
                 pereval=pereval,
-                data=image_data.get("data", ""),
-                title=image_data.get("title", "")
+                season_id=diff['season'],  # Используем ID
+                difficulty_id=diff['difficulty']  # Используем ID
             )
+            logger.info(f"✅ Создана сложность для перевала {pereval.id}")
 
         return pereval
+
 
     @staticmethod
     def get_weather(pereval_id):
